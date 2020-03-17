@@ -24,6 +24,7 @@ import { editorWidgetBackground, editorWidgetForeground, widgetShadow } from 'vs
 import { ScrollType } from 'vs/editor/common/editorCommon';
 import { SearchWidget, SearchOptions } from 'vs/workbench/contrib/preferences/browser/preferencesWidgets';
 import { withNullAsUndefined } from 'vs/base/common/types';
+import { StandardMouseEvent, IMouseEvent } from 'vs/base/browser/mouseEvent';
 
 export interface KeybindingsSearchOptions extends SearchOptions {
 	recordEnter?: boolean;
@@ -51,6 +52,7 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	// readonly onBlur: Event<void> = this._onBlur.event;
 
 	constructor(parent: HTMLElement, options: SearchOptions,
+		private readonly _parentDialog: DefineKeybindingWidget,
 		@IContextViewService contextViewService: IContextViewService,
 		@IKeybindingService private readonly keybindingService: IKeybindingService,
 		@IInstantiationService instantiationService: IInstantiationService,
@@ -73,6 +75,7 @@ export class KeybindingsSearchWidget extends SearchWidget {
 
 	startRecordingKeys(): void {
 		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.KEY_DOWN, (e: KeyboardEvent) => this._onKeyDown(new StandardKeyboardEvent(e))));
+		this.recordDisposables.add(dom.addDisposableListener(document, dom.EventType.MOUSE_UP, (e: MouseEvent) => this._onMouseUp(new StandardMouseEvent(e))));
 		// this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.BLUR, () => this._onBlur.fire()));
 		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.INPUT, () => {
 			// Prevent other characters from showing up
@@ -95,6 +98,16 @@ export class KeybindingsSearchWidget extends SearchWidget {
 		this._chordPart = null;
 	}
 
+	private _onMouseUp(mouseEvent: IMouseEvent): void {
+		if (!this._parentDialog.isVisible) { return; }
+
+		mouseEvent.preventDefault();
+		mouseEvent.stopPropagation();
+		// Because of the mouse click, maybe outside of the dialog boundaries, the input box may lose its focus
+		this.inputBox.inputElement.focus();
+		this.printMouseBinding(mouseEvent);
+	}
+
 	private _onKeyDown(keyboardEvent: IKeyboardEvent): void {
 		keyboardEvent.preventDefault();
 		keyboardEvent.stopPropagation();
@@ -110,23 +123,33 @@ export class KeybindingsSearchWidget extends SearchWidget {
 		this.printKeybinding(keyboardEvent);
 	}
 
+	private printMouseBinding(mouseEvent: IMouseEvent): void {
+		const keybinding = this.keybindingService.resolveMouseEvent(mouseEvent);
+		const info = `button: ${mouseEvent.browserEvent.button}, => UI: ${keybinding.getAriaLabel()}, user settings: ${keybinding.getUserSettingsLabel()}, dispatch: ${keybinding.getDispatchParts()[0]}`;
+		this.printBinding(keybinding, info);
+	}
+
 	private printKeybinding(keyboardEvent: IKeyboardEvent): void {
 		const keybinding = this.keybindingService.resolveKeyboardEvent(keyboardEvent);
 		const info = `code: ${keyboardEvent.browserEvent.code}, keyCode: ${keyboardEvent.browserEvent.keyCode}, key: ${keyboardEvent.browserEvent.key} => UI: ${keybinding.getAriaLabel()}, user settings: ${keybinding.getUserSettingsLabel()}, dispatch: ${keybinding.getDispatchParts()[0]}`;
-		const options = this.options as KeybindingsSearchOptions;
+		this.printBinding(keybinding, info);
+	}
 
+	private printBinding(keybinding: ResolvedKeybinding, info: string): void {
+		const options = this.options as KeybindingsSearchOptions;
 		const hasFirstPart = (this._firstPart && this._firstPart.getDispatchParts()[0] !== null);
 		const hasChordPart = (this._chordPart && this._chordPart.getDispatchParts()[0] !== null);
 		if (hasFirstPart && hasChordPart) {
 			// Reset
 			this._firstPart = keybinding;
 			this._chordPart = null;
-		} else if (!hasFirstPart) {
+		}
+		else if (!hasFirstPart) {
 			this._firstPart = keybinding;
-		} else {
+		}
+		else {
 			this._chordPart = keybinding;
 		}
-
 		let value = '';
 		if (this._firstPart) {
 			value = (this._firstPart.getUserSettingsLabel() || '');
@@ -135,7 +158,6 @@ export class KeybindingsSearchWidget extends SearchWidget {
 			value = value + ' ' + this._chordPart.getUserSettingsLabel();
 		}
 		this.setInputValue(options.quoteRecordedKeys ? `"${value}"` : value);
-
 		this.inputBox.inputElement.title = info;
 		this._onKeybinding.fire([this._firstPart, this._chordPart]);
 	}
@@ -198,7 +220,7 @@ export class DefineKeybindingWidget extends Widget {
 			}
 		}));
 
-		this._keybindingInputWidget = this._register(this.instantiationService.createInstance(KeybindingsSearchWidget, this._domNode.domNode, { ariaLabel: message }));
+		this._keybindingInputWidget = this._register(this.instantiationService.createInstance(KeybindingsSearchWidget, this._domNode.domNode, { ariaLabel: message }, this));
 		this._keybindingInputWidget.startRecordingKeys();
 		this._register(this._keybindingInputWidget.onKeybinding(keybinding => this.onKeybinding(keybinding)));
 		this._register(this._keybindingInputWidget.onEnter(() => this.hide()));
@@ -215,6 +237,10 @@ export class DefineKeybindingWidget extends Widget {
 
 	get domNode(): HTMLElement {
 		return this._domNode.domNode;
+	}
+
+	get isVisible(): boolean {
+		return this._isVisible;
 	}
 
 	define(): Promise<string | null> {

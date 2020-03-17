@@ -60,6 +60,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 	protected abstract _documentHasFocus(): boolean;
 	public abstract resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[];
 	public abstract resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
+	public abstract resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding;
 	public abstract resolveUserBinding(userBinding: string): ResolvedKeybinding[];
 	public abstract registerSchemaContribution(contribution: KeybindingsSchemaContribution): void;
 	public abstract _dumpDebugInfo(): string;

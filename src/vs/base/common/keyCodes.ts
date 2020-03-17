@@ -192,6 +192,13 @@ export const enum KeyCode {
 	ABNT_C1 = 110, // Brazilian (ABNT) Keyboard
 	ABNT_C2 = 111, // Brazilian (ABNT) Keyboard
 
+	/** Left mouse button. */
+	MOUSE_LEFT = 112,
+	/** Middle mouse button. */
+	MOUSE_MIDDLE = 113,
+	/** Right mouse button. */
+	MOUSE_RIGHT = 114,
+
 	/**
 	 * Placed last to cover the length of the enum.
 	 * Please do not depend on this value!
@@ -356,6 +363,10 @@ const userSettingsGeneralMap = new KeyCodeStrMap();
 	define(KeyCode.NUMPAD_SUBTRACT, 'NumPad_Subtract');
 	define(KeyCode.NUMPAD_DECIMAL, 'NumPad_Decimal');
 	define(KeyCode.NUMPAD_DIVIDE, 'NumPad_Divide');
+
+	define(KeyCode.MOUSE_LEFT, 'LMB');
+	define(KeyCode.MOUSE_MIDDLE, 'MMB');
+	define(KeyCode.MOUSE_RIGHT, 'RMB');
 
 })();
 

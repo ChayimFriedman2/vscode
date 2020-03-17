@@ -11,7 +11,7 @@ import { KeyCode, Keybinding, ResolvedKeybinding } from 'vs/base/common/keyCodes
 import { Disposable, IDisposable } from 'vs/base/common/lifecycle';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { IContextKeyService, IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextkey';
-import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IMouseEvent, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
 import { IResolveResult, KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { INotificationService } from 'vs/platform/notification/common/notification';
@@ -157,6 +157,10 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	protected _dispatch(e: IKeyboardEvent, target: IContextKeyServiceTarget): boolean {
 		return this._doDispatch(this.resolveKeyboardEvent(e), target);
+	}
+
+	protected _dispatchMouse(e: IMouseEvent, target: IContextKeyServiceTarget): boolean {
+		return this._doDispatch(this.resolveMouseEvent(e), target);
 	}
 
 	private _doDispatch(keybinding: ResolvedKeybinding, target: IContextKeyServiceTarget): boolean {

@@ -9,7 +9,7 @@ import Severity from 'vs/base/common/severity';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { ContextKeyExpr, IContext, IContextKeyService, IContextKeyServiceTarget, ContextKeyExpression } from 'vs/platform/contextkey/common/contextkey';
 import { AbstractKeybindingService } from 'vs/platform/keybinding/common/abstractKeybindingService';
-import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
@@ -59,6 +59,17 @@ suite('AbstractKeybindingService', () => {
 				keyboardEvent.altKey,
 				keyboardEvent.metaKey,
 				keyboardEvent.keyCode
+			).toChord();
+			return this.resolveKeybinding(keybinding)[0];
+		}
+
+		public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
+			let keybinding = new SimpleKeybinding(
+				mouseEvent.ctrlKey,
+				mouseEvent.shiftKey,
+				mouseEvent.altKey,
+				mouseEvent.metaKey,
+				mouseEvent.keyCode
 			).toChord();
 			return this.resolveKeybinding(keybinding)[0];
 		}

@@ -6,7 +6,7 @@
 import { ChordKeybinding, KeyCode, Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, ScanCode, ScanCodeBinding } from 'vs/base/common/scanCode';
-import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
@@ -40,6 +40,17 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 			keyboardEvent.altKey,
 			keyboardEvent.metaKey,
 			keyboardEvent.keyCode
+		);
+		return new USLayoutResolvedKeybinding(keybinding.toChord(), this._OS);
+	}
+
+	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
+		let keybinding = new SimpleKeybinding(
+			mouseEvent.ctrlKey,
+			mouseEvent.shiftKey,
+			mouseEvent.altKey,
+			mouseEvent.metaKey,
+			mouseEvent.keyCode
 		);
 		return new USLayoutResolvedKeybinding(keybinding.toChord(), this._OS);
 	}

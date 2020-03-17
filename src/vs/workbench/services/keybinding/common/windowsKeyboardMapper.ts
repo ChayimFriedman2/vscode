@@ -8,7 +8,7 @@ import { KeyCode, KeyCodeUtils, Keybinding, ResolvedKeybinding, SimpleKeybinding
 import { UILabelProvider } from 'vs/base/common/keybindingLabels';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, ScanCode, ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
-import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
@@ -472,6 +472,11 @@ export class WindowsKeyboardMapper implements IKeyboardMapper {
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): WindowsNativeResolvedKeybinding {
 		const keybinding = new SimpleKeybinding(keyboardEvent.ctrlKey, keyboardEvent.shiftKey, keyboardEvent.altKey, keyboardEvent.metaKey, keyboardEvent.keyCode);
+		return new WindowsNativeResolvedKeybinding(this, [keybinding]);
+	}
+
+	public resolveMouseEvent(mouseEvent: IMouseEvent): WindowsNativeResolvedKeybinding {
+		const keybinding = new SimpleKeybinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.keyCode);
 		return new WindowsNativeResolvedKeybinding(this, [keybinding]);
 	}
 

@@ -7,7 +7,7 @@ import { CharCode } from 'vs/base/common/charCode';
 import { KeyCode, KeyCodeUtils, Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, IMMUTABLE_KEY_CODE_TO_CODE, ScanCode, ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
-import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
 
@@ -1048,6 +1048,12 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		}
 
 		const keypress = new ScanCodeBinding(keyboardEvent.ctrlKey, keyboardEvent.shiftKey, keyboardEvent.altKey, keyboardEvent.metaKey, code);
+		return new NativeResolvedKeybinding(this, this._OS, [keypress]);
+	}
+
+	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
+		const code = IMMUTABLE_KEY_CODE_TO_CODE[mouseEvent.keyCode];
+		const keypress = new ScanCodeBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, code);
 		return new NativeResolvedKeybinding(this, this._OS, [keypress]);
 	}
 

@@ -47,8 +47,8 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	private _onEscape = this._register(new Emitter<void>());
 	readonly onEscape: Event<void> = this._onEscape.event;
 
-	private _onBlur = this._register(new Emitter<void>());
-	readonly onBlur: Event<void> = this._onBlur.event;
+	// private _onBlur = this._register(new Emitter<void>());
+	// readonly onBlur: Event<void> = this._onBlur.event;
 
 	constructor(parent: HTMLElement, options: SearchOptions,
 		@IContextViewService contextViewService: IContextViewService,
@@ -73,7 +73,7 @@ export class KeybindingsSearchWidget extends SearchWidget {
 
 	startRecordingKeys(): void {
 		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.KEY_DOWN, (e: KeyboardEvent) => this._onKeyDown(new StandardKeyboardEvent(e))));
-		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.BLUR, () => this._onBlur.fire()));
+		// this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.BLUR, () => this._onBlur.fire()));
 		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.INPUT, () => {
 			// Prevent other characters from showing up
 			this.setInputValue(this._inputValue);
@@ -203,7 +203,7 @@ export class DefineKeybindingWidget extends Widget {
 		this._register(this._keybindingInputWidget.onKeybinding(keybinding => this.onKeybinding(keybinding)));
 		this._register(this._keybindingInputWidget.onEnter(() => this.hide()));
 		this._register(this._keybindingInputWidget.onEscape(() => this.onCancel()));
-		this._register(this._keybindingInputWidget.onBlur(() => this.onCancel()));
+		// this._register(this._keybindingInputWidget.onBlur(() => this.onCancel()));
 
 		this._outputNode = dom.append(this._domNode.domNode, dom.$('.output'));
 		this._showExistingKeybindingsNode = dom.append(this._domNode.domNode, dom.$('.existing'));

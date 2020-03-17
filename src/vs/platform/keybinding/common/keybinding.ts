@@ -39,6 +39,16 @@ export interface IKeyboardEvent {
 	readonly code: string;
 }
 
+export interface IMouseEvent {
+	readonly ctrlKey: boolean;
+	readonly shiftKey: boolean;
+	readonly altKey: boolean;
+	readonly metaKey: boolean;
+	readonly leftButton: boolean;
+	readonly middleButton: boolean;
+	readonly rightButton: boolean;
+}
+
 export interface KeybindingsSchemaContribution {
 	readonly onDidChange?: Event<void>;
 

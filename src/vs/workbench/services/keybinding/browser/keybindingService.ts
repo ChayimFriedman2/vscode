@@ -20,7 +20,7 @@ import { ContextKeyExpr, IContextKeyService, ContextKeyExpression } from 'vs/pla
 import { IEnvironmentService } from 'vs/platform/environment/common/environment';
 import { Extensions, IJSONContributionRegistry } from 'vs/platform/jsonschemas/common/jsonContributionRegistry';
 import { AbstractKeybindingService } from 'vs/platform/keybinding/common/abstractKeybindingService';
-import { IKeyboardEvent, IUserFriendlyKeybinding, KeybindingSource, IKeybindingService, IKeybindingEvent, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent, IMouseEvent, IUserFriendlyKeybinding, KeybindingSource, IKeybindingService, IKeybindingEvent, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
 import { KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { IKeybindingItem, IKeybindingRule2, KeybindingWeight, KeybindingsRegistry } from 'vs/platform/keybinding/common/keybindingsRegistry';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
@@ -480,6 +480,11 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
 		this.keymapService.validateCurrentKeyboardMapping(keyboardEvent);
 		return this._keyboardMapper.resolveKeyboardEvent(keyboardEvent);
+	}
+
+	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
+		// this.keymapService.validateCurrentKeyboardMapping(mouseEvent);
+		return this._keyboardMapper.resolveMouseEvent(mouseEvent);
 	}
 
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {

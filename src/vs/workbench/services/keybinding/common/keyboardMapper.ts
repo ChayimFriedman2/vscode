@@ -5,12 +5,13 @@
 
 import { Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { ScanCodeBinding } from 'vs/base/common/scanCode';
-import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 
 export interface IKeyboardMapper {
 	dumpDebugInfo(): string;
 	resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[];
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
+	resolveMouseEvent(keyboardEvent: IMouseEvent): ResolvedKeybinding;
 	resolveUserBinding(firstPart: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[];
 }
 
@@ -41,6 +42,10 @@ export class CachedKeyboardMapper implements IKeyboardMapper {
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
 		return this._actual.resolveKeyboardEvent(keyboardEvent);
+	}
+
+	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
+		return this._actual.resolveMouseEvent(mouseEvent);
 	}
 
 	public resolveUserBinding(parts: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {

@@ -428,6 +428,7 @@ declare namespace monaco {
 		preventDefault(): void;
 		stopPropagation(): void;
 	}
+
 	export interface IMouseEvent {
 		readonly browserEvent: MouseEvent;
 		readonly leftButton: boolean;

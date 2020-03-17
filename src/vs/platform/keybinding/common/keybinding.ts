@@ -44,9 +44,7 @@ export interface IMouseEvent {
 	readonly shiftKey: boolean;
 	readonly altKey: boolean;
 	readonly metaKey: boolean;
-	readonly leftButton: boolean;
-	readonly middleButton: boolean;
-	readonly rightButton: boolean;
+	readonly keyCode: KeyCode;
 }
 
 export interface KeybindingsSchemaContribution {

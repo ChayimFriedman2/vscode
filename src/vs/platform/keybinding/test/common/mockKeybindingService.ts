@@ -104,6 +104,17 @@ export class MockKeybindingService implements IKeybindingService {
 		return this.resolveKeybinding(keybinding.toChord())[0];
 	}
 
+	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
+		let keybinding = new SimpleKeybinding(
+			mouseEvent.ctrlKey,
+			mouseEvent.shiftKey,
+			mouseEvent.altKey,
+			mouseEvent.metaKey,
+			mouseEvent.keyCode
+		);
+		return this.resolveKeybinding(keybinding.toChord())[0];
+	}
+
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {
 		return [];
 	}

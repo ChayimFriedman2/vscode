@@ -69,6 +69,8 @@ export interface IKeybindingService {
 
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 
+	resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding;
+
 	resolveUserBinding(userBinding: string): ResolvedKeybinding[];
 
 	/**

@@ -31,7 +31,7 @@ import { IContextKeyService, ContextKeyExpression } from 'vs/platform/contextkey
 import { IConfirmation, IConfirmationResult, IDialogOptions, IDialogService, IShowResult } from 'vs/platform/dialogs/common/dialogs';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { AbstractKeybindingService } from 'vs/platform/keybinding/common/abstractKeybindingService';
-import { IKeybindingEvent, IKeyboardEvent, KeybindingSource, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeyboardEvent, KeybindingSource, KeybindingsSchemaContribution, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { IKeybindingItem, KeybindingsRegistry } from 'vs/platform/keybinding/common/keybindingsRegistry';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
@@ -391,6 +391,17 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
 			keyboardEvent.altKey,
 			keyboardEvent.metaKey,
 			keyboardEvent.keyCode
+		).toChord();
+		return new USLayoutResolvedKeybinding(keybinding, OS);
+	}
+
+	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
+		let keybinding = new SimpleKeybinding(
+			mouseEvent.ctrlKey,
+			mouseEvent.shiftKey,
+			mouseEvent.altKey,
+			mouseEvent.metaKey,
+			mouseEvent.keyCode
 		).toChord();
 		return new USLayoutResolvedKeybinding(keybinding, OS);
 	}

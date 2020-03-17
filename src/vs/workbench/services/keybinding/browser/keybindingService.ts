@@ -7,6 +7,7 @@ import * as nls from 'vs/nls';
 import * as browser from 'vs/base/browser/browser';
 import * as dom from 'vs/base/browser/dom';
 import { StandardKeyboardEvent } from 'vs/base/browser/keyboardEvent';
+import { StandardMouseEvent } from 'vs/base/browser/mouseEvent';
 import { Emitter, Event } from 'vs/base/common/event';
 import { IJSONSchema } from 'vs/base/common/jsonSchema';
 import { Keybinding, ResolvedKeybinding, KeyCode, KeyMod } from 'vs/base/common/keyCodes';
@@ -248,6 +249,14 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 			let shouldPreventDefault = this._dispatch(keyEvent, keyEvent.target);
 			if (shouldPreventDefault) {
 				keyEvent.preventDefault();
+			}
+		}));
+
+		this._register(dom.addDisposableListener(window, dom.EventType.MOUSE_UP, (e: MouseEvent) => {
+			let mouseEvent = new StandardMouseEvent(e);
+			let shouldPreventDefault = this._dispatchMouse(mouseEvent, mouseEvent.target);
+			if (shouldPreventDefault) {
+				mouseEvent.preventDefault();
 			}
 		}));
 

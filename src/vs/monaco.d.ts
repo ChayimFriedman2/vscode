@@ -444,6 +444,7 @@ declare namespace monaco {
 		readonly altKey: boolean;
 		readonly metaKey: boolean;
 		readonly timestamp: number;
+		readonly keyCode: KeyCode;
 		preventDefault(): void;
 		stopPropagation(): void;
 	}

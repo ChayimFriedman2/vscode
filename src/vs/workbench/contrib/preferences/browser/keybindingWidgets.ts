@@ -80,6 +80,9 @@ export class KeybindingsSearchWidget extends SearchWidget {
 			// Prevent other characters from showing up
 			this.setInputValue(this._inputValue);
 		}));
+
+		// Prevent context menu when recording
+		this.recordDisposables.add(dom.addDisposableIgnoreListener(this.inputBox.inputElement, dom.EventType.CONTEXT_MENU));
 	}
 
 	stopRecordingKeys(): void {

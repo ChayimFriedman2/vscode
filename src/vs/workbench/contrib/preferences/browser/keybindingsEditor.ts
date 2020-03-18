@@ -207,6 +207,28 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		});
 	}
 
+	defineDrag(keybindingEntry: IKeybindingItemEntry): Promise<any> {
+		this.selectEntry(keybindingEntry);
+		this.showOverlayContainer();
+		this.defineKeybindingWidget.enableChord = false;
+		return this.defineKeybindingWidget.define().then(key => {
+			if (key) {
+				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);
+			}
+			return null;
+		}).then(() => {
+			this.defineKeybindingWidget.enableChord = true;
+			this.hideOverlayContainer();
+			this.selectEntry(keybindingEntry);
+		}, error => {
+			this.defineKeybindingWidget.enableChord = true;
+			this.hideOverlayContainer();
+			this.onKeybindingEditingError(error);
+			this.selectEntry(keybindingEntry);
+			return error;
+		});
+	}
+
 	defineWhenExpression(keybindingEntry: IKeybindingItemEntry): void {
 		if (keybindingEntry.keybindingItem.keybinding) {
 			this.selectEntry(keybindingEntry);

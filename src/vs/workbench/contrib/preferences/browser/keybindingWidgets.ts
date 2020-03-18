@@ -128,6 +128,28 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	}
 
 	private printKeybinding(keyboardEvent: IKeyboardEvent): void {
+		if (keyboardEvent.browserEvent.repeat) {
+			// The event was fired by holding a key - it's at least the second time (for the same key).
+			// The problem without mouse keybindings is minimal: for instance, pressing and holding Alt
+			// then pressing and holding Z will result in an alternate fast cycle of "ctrl+", "ctrl+z" and "ctrl+z ctrl+z".
+			// however since there is not real reason to hold the key, it was mostly OK.
+			// But when I added mouse keybindings, I've noticed a strange fact: if you hold down a modifier key
+			// then press on a mouse button, the result is (for Alt+left button) "alt+lmb alt+" instead of
+			// just "alt+lmb". Moreover, when there is already a key (say Ctrl+S) assigned, and we want
+			// to add a chord, and click Ctrl+LMB, instead of "ctrl+s ctrl+lmb" you'll get "ctrl+"!
+			// very frustrating, because this actually prevents chording mouse buttons.
+			// Also there were times when this bug did not appeared.
+			// After hours of debug I found the problem: when you press Ctrl, a keydown event is being fired as
+			// long as you hold Ctrl down. If I then press LMB, a mouse event is being fired - but immediately
+			// the series of Ctrl's keydowns continues. That results in that VSCode thinks you re-recording
+			// your keybinding, and start new keybinding within Ctrl - unless you're fast enough to leave Ctrl
+			// before the next keydown event is fired (that's hard! believe me :)). The problem can't appear
+			// without mouse recording, because if I would replace the Ctrl+LMB in my example with Ctrl+K,
+			// the keydown event for K will override the one of Ctrl - because there can't be two keydown events
+			// in parallel, once you start new key the previous is removed even if it's still holden down.
+			return;
+		}
+
 		const keybinding = this.keybindingService.resolveKeyboardEvent(keyboardEvent);
 		const info = `code: ${keyboardEvent.browserEvent.code}, keyCode: ${keyboardEvent.browserEvent.keyCode}, key: ${keyboardEvent.browserEvent.key} => UI: ${keybinding.getAriaLabel()}, user settings: ${keybinding.getUserSettingsLabel()}, dispatch: ${keybinding.getDispatchParts()[0]}`;
 		this.printBinding(keybinding, info);

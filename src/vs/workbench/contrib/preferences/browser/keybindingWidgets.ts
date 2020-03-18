@@ -37,6 +37,9 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	private _chordPart: ResolvedKeybinding | null;
 	private _inputValue: string;
 
+	/** When set to false, chord recording is not enabled. */
+	enableChord: boolean = true;
+
 	private readonly recordDisposables = this._register(new DisposableStore());
 
 	private _onKeybinding = this._register(new Emitter<[ResolvedKeybinding | null, ResolvedKeybinding | null]>());
@@ -157,25 +160,30 @@ export class KeybindingsSearchWidget extends SearchWidget {
 
 	private printBinding(keybinding: ResolvedKeybinding, info: string): void {
 		const options = this.options as KeybindingsSearchOptions;
-		const hasFirstPart = (this._firstPart && this._firstPart.getDispatchParts()[0] !== null);
-		const hasChordPart = (this._chordPart && this._chordPart.getDispatchParts()[0] !== null);
-		if (hasFirstPart && hasChordPart) {
-			// Reset
-			this._firstPart = keybinding;
-			this._chordPart = null;
-		}
-		else if (!hasFirstPart) {
-			this._firstPart = keybinding;
-		}
-		else {
-			this._chordPart = keybinding;
-		}
 		let value = '';
-		if (this._firstPart) {
-			value = (this._firstPart.getUserSettingsLabel() || '');
-		}
-		if (this._chordPart) {
-			value = value + ' ' + this._chordPart.getUserSettingsLabel();
+		if (this.enableChord) {
+			const hasFirstPart = (this._firstPart && this._firstPart.getDispatchParts()[0] !== null);
+			const hasChordPart = (this._chordPart && this._chordPart.getDispatchParts()[0] !== null);
+			if (hasFirstPart && hasChordPart) {
+				// Reset
+				this._firstPart = keybinding;
+				this._chordPart = null;
+			}
+			else if (!hasFirstPart) {
+				this._firstPart = keybinding;
+			}
+			else {
+				this._chordPart = keybinding;
+			}
+			if (this._firstPart) {
+				value = (this._firstPart.getUserSettingsLabel() || '');
+			}
+			if (this._chordPart) {
+				value = value + ' ' + this._chordPart.getUserSettingsLabel();
+			}
+		} else {
+			this._firstPart = keybinding;
+			value = this._firstPart.getUserSettingsLabel() || '';
 		}
 		this.setInputValue(options.quoteRecordedKeys ? `"${value}"` : value);
 		this.inputBox.inputElement.title = info;
@@ -258,6 +266,15 @@ export class DefineKeybindingWidget extends Widget {
 	get domNode(): HTMLElement {
 		return this._domNode.domNode;
 	}
+
+	/** When set to false, chord recording is not enabled. */
+	public get enableChord(): boolean {
+		return this._keybindingInputWidget.enableChord;
+	}
+	public set enableChord(value: boolean) {
+		this._keybindingInputWidget.enableChord = value;
+	}
+
 
 	define(): Promise<string | null> {
 		this._keybindingInputWidget.clear();

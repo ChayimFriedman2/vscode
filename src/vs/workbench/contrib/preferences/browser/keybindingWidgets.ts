@@ -48,11 +48,10 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	private _onEscape = this._register(new Emitter<void>());
 	readonly onEscape: Event<void> = this._onEscape.event;
 
-	// private _onBlur = this._register(new Emitter<void>());
-	// readonly onBlur: Event<void> = this._onBlur.event;
+	private _onBlur = this._register(new Emitter<void>());
+	readonly onBlur: Event<void> = this._onBlur.event;
 
 	constructor(parent: HTMLElement, options: SearchOptions,
-		private readonly _parentDialog: DefineKeybindingWidget,
 		@IContextViewService contextViewService: IContextViewService,
 		@IKeybindingService private readonly keybindingService: IKeybindingService,
 		@IInstantiationService instantiationService: IInstantiationService,
@@ -75,8 +74,8 @@ export class KeybindingsSearchWidget extends SearchWidget {
 
 	startRecordingKeys(): void {
 		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.KEY_DOWN, (e: KeyboardEvent) => this._onKeyDown(new StandardKeyboardEvent(e))));
-		this.recordDisposables.add(dom.addDisposableListener(document, dom.EventType.MOUSE_UP, (e: MouseEvent) => this._onMouseUp(new StandardMouseEvent(e))));
-		// this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.BLUR, () => this._onBlur.fire()));
+		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.MOUSE_UP, (e: MouseEvent) => this._onMouseUp(new StandardMouseEvent(e))));
+		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.BLUR, () => this._onBlur.fire()));
 		this.recordDisposables.add(dom.addDisposableListener(this.inputBox.inputElement, dom.EventType.INPUT, () => {
 			// Prevent other characters from showing up
 			this.setInputValue(this._inputValue);
@@ -99,12 +98,8 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	}
 
 	private _onMouseUp(mouseEvent: IMouseEvent): void {
-		if (!this._parentDialog.isVisible) { return; }
-
 		mouseEvent.preventDefault();
 		mouseEvent.stopPropagation();
-		// Because of the mouse click, maybe outside of the dialog boundaries, the input box may lose its focus
-		this.inputBox.inputElement.focus();
 		this.printMouseBinding(mouseEvent);
 	}
 
@@ -220,12 +215,12 @@ export class DefineKeybindingWidget extends Widget {
 			}
 		}));
 
-		this._keybindingInputWidget = this._register(this.instantiationService.createInstance(KeybindingsSearchWidget, this._domNode.domNode, { ariaLabel: message }, this));
+		this._keybindingInputWidget = this._register(this.instantiationService.createInstance(KeybindingsSearchWidget, this._domNode.domNode, { ariaLabel: message }));
 		this._keybindingInputWidget.startRecordingKeys();
 		this._register(this._keybindingInputWidget.onKeybinding(keybinding => this.onKeybinding(keybinding)));
 		this._register(this._keybindingInputWidget.onEnter(() => this.hide()));
 		this._register(this._keybindingInputWidget.onEscape(() => this.onCancel()));
-		// this._register(this._keybindingInputWidget.onBlur(() => this.onCancel()));
+		this._register(this._keybindingInputWidget.onBlur(() => this.onCancel()));
 
 		this._outputNode = dom.append(this._domNode.domNode, dom.$('.output'));
 		this._showExistingKeybindingsNode = dom.append(this._domNode.domNode, dom.$('.existing'));
@@ -237,10 +232,6 @@ export class DefineKeybindingWidget extends Widget {
 
 	get domNode(): HTMLElement {
 		return this._domNode.domNode;
-	}
-
-	get isVisible(): boolean {
-		return this._isVisible;
 	}
 
 	define(): Promise<string | null> {

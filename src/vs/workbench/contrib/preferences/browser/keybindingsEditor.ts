@@ -25,7 +25,7 @@ import { DefineKeybindingWidget, KeybindingsSearchWidget, KeybindingsSearchOptio
 import {
 	IKeybindingsEditorPane, CONTEXT_KEYBINDING_FOCUS, CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDINGS_SEARCH_FOCUS, KEYBINDINGS_EDITOR_COMMAND_REMOVE, KEYBINDINGS_EDITOR_COMMAND_COPY,
 	KEYBINDINGS_EDITOR_COMMAND_RESET, KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND, KEYBINDINGS_EDITOR_COMMAND_DEFINE, KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR,
-	KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS, KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE, KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN
+	KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS, KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE, KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN, KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG
 } from 'vs/workbench/contrib/preferences/common/preferences';
 import { IContextMenuService, IContextViewService } from 'vs/platform/contextview/browser/contextView';
 import { IKeybindingEditingService } from 'vs/workbench/services/keybinding/common/keybindingEditing';
@@ -656,6 +656,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 					this.createCopyCommandAction(<IKeybindingItemEntry>e.element),
 					new Separator(),
 					this.createDefineAction(<IKeybindingItemEntry>e.element),
+					this.createDefineDragAction(<IKeybindingItemEntry>e.element),
 					this.createRemoveAction(<IKeybindingItemEntry>e.element),
 					this.createResetAction(<IKeybindingItemEntry>e.element),
 					this.createDefineWhenExpressionAction(<IKeybindingItemEntry>e.element),
@@ -682,6 +683,15 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 			enabled: true,
 			id: KEYBINDINGS_EDITOR_COMMAND_DEFINE,
 			run: () => this.defineKeybinding(keybindingItemEntry)
+		};
+	}
+
+	private createDefineDragAction(keybindingItemEntry: IKeybindingItemEntry): IAction {
+		return <IAction>{
+			label: keybindingItemEntry.keybindingItem.keybinding ? localize('changeLabelToDrag', "Change Keybinding to Mouse Drag") : localize('addDrag', "Add Mouse Drag Keybinding"),
+			enabled: true,
+			id: KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG,
+			run: () => this.defineDrag(keybindingItemEntry)
 		};
 	}
 

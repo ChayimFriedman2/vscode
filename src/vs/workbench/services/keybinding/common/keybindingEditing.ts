@@ -73,6 +73,9 @@ export class KeybindingsEditingService extends Disposable implements IKeybinding
 		if (key === 'lmb' || key === 'rmb') {
 			return Promise.reject(new Error(localize('cannotKeybindLmbRmbAlone', "The left and right mouse buttons are considered too basic and cannot be used as shortcus alone.")));
 		}
+		if (key === 'rmb rmb') {
+			return Promise.reject(new Error(localize('cannotKeybindDblRclick', "Cannot bind commands to double right-click.")));
+		}
 
 		return this.resolveAndValidate()
 			.then(reference => {

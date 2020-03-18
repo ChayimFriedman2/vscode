@@ -9,7 +9,7 @@ import { IKeyboardEvent, StandardKeyboardEvent } from 'vs/base/browser/keyboardE
 import { IMouseEvent, StandardMouseEvent } from 'vs/base/browser/mouseEvent';
 import { TimeoutTimer } from 'vs/base/common/async';
 import { onUnexpectedError } from 'vs/base/common/errors';
-import { Emitter, Event } from 'vs/base/common/event';
+import { Emitter, Event as BaseEvent } from 'vs/base/common/event';
 import { Disposable, IDisposable, toDisposable } from 'vs/base/common/lifecycle';
 import * as platform from 'vs/base/common/platform';
 import { coalesce } from 'vs/base/common/arrays';
@@ -121,6 +121,27 @@ export function addDisposableListener(node: EventTarget, type: string, handler: 
 export function addDisposableListener(node: EventTarget, type: string, handler: (event: any) => void, options: AddEventListenerOptions): IDisposable;
 export function addDisposableListener(node: EventTarget, type: string, handler: (event: any) => void, useCaptureOrOptions?: boolean | AddEventListenerOptions): IDisposable {
 	return new DomListener(node, type, handler, useCaptureOrOptions);
+}
+
+export interface IgnoreEventOptions {
+	/** Whether to call preventDefault(). Defaults to true. */
+	readonly preventDefault?: boolean;
+	/** Whether to call stopPropagation(). Defaults to true. */
+	readonly stopPropagation?: boolean;
+}
+
+/**
+ * Forces the browser to ignore events, i.e. preventDefault() and stopPropagation().
+ */
+export function addDisposableIgnoreListener(node: EventTarget, type: string, { preventDefault = true, stopPropagation = true }: IgnoreEventOptions = {}): IDisposable {
+	return addDisposableListener(node, type, (e: Event) => {
+		if (preventDefault) {
+			e.preventDefault();
+		}
+		if (stopPropagation) {
+			e.stopPropagation();
+		}
+	});
 }
 
 export interface IAddStandardDisposableListenerSignature {
@@ -888,8 +909,8 @@ export const EventHelper = {
 };
 
 export interface IFocusTracker extends Disposable {
-	onDidFocus: Event<void>;
-	onDidBlur: Event<void>;
+	onDidFocus: BaseEvent<void>;
+	onDidBlur: BaseEvent<void>;
 	refreshState?(): void;
 }
 
@@ -914,10 +935,10 @@ export function restoreParentsScrollTop(node: Element, state: number[]): void {
 class FocusTracker extends Disposable implements IFocusTracker {
 
 	private readonly _onDidFocus = this._register(new Emitter<void>());
-	public readonly onDidFocus: Event<void> = this._onDidFocus.event;
+	public readonly onDidFocus: BaseEvent<void> = this._onDidFocus.event;
 
 	private readonly _onDidBlur = this._register(new Emitter<void>());
-	public readonly onDidBlur: Event<void> = this._onDidBlur.event;
+	public readonly onDidBlur: BaseEvent<void> = this._onDidBlur.event;
 
 	private _refreshStateHandler: () => void;
 

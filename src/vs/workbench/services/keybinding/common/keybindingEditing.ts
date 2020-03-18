@@ -70,6 +70,10 @@ export class KeybindingsEditingService extends Disposable implements IKeybinding
 	}
 
 	private doEditKeybinding(keybindingItem: ResolvedKeybindingItem, key: string, when: string | undefined): Promise<void> {
+		if (key === 'lmb' || key === 'rmb') {
+			return Promise.reject(new Error(localize('cannotKeybindLmbRmbAlone', "The left and right mouse buttons are considered too basic and cannot be used as shortcus alone.")));
+		}
+
 		return this.resolveAndValidate()
 			.then(reference => {
 				const model = reference.object.textEditorModel;

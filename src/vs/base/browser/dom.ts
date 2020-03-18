@@ -98,6 +98,18 @@ class DomListener implements IDisposable {
 		this._node = node;
 		this._type = type;
 		this._handler = handler;
+		if (type === EventType.CONTEXT_MENU) {
+			// We want that context menus will appear only with pure right click, without modifiers (Shift, Ctrl, ...).
+			// Right clicks with modifiers are reserved for mouse shortcuts.
+			this._handler = (e: MouseEvent) => {
+				if (e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
+					e.preventDefault();
+					e.stopPropagation();
+				} else {
+					handler(e);
+				}
+			};
+		}
 		this._options = (options || false);
 		this._node.addEventListener(this._type, this._handler, this._options);
 	}

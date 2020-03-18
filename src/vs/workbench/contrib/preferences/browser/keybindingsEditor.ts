@@ -214,6 +214,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		return this.defineKeybindingWidget.define().then(key => {
 			if (key) {
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);
+				return this.updateKeybinding(keybindingEntry, `DRAG ${key}`, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {

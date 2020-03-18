@@ -87,6 +87,13 @@ export const removeClass: (node: HTMLElement | SVGElement, className: string) =>
 export const removeClasses: (node: HTMLElement | SVGElement, ...classNames: string[]) => void = _classList.removeClasses.bind(_classList);
 export const toggleClass: (node: HTMLElement | SVGElement, className: string, shouldHaveIt?: boolean) => void = _classList.toggleClass.bind(_classList);
 
+/**
+ * Returns true if there are not modifiers pressed (if there are we shouldn't display the context menu).
+ */
+export function shouldContextMenuAppear(e: MouseEvent) {
+	return !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey);
+}
+
 class DomListener implements IDisposable {
 
 	private _handler: (e: any) => void;
@@ -102,10 +109,7 @@ class DomListener implements IDisposable {
 			// We want that context menus will appear only with pure right click, without modifiers (Shift, Ctrl, ...).
 			// Right clicks with modifiers are reserved for mouse shortcuts.
 			this._handler = (e: MouseEvent) => {
-				if (e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
-					e.preventDefault();
-					e.stopPropagation();
-				} else {
+				if (shouldContextMenuAppear(e)) {
 					handler(e);
 				}
 			};

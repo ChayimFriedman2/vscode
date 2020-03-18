@@ -9,7 +9,7 @@ import { Separator } from 'vs/base/browser/ui/actionbar/actionbar';
 import { IWorkbenchLayoutService } from 'vs/workbench/services/layout/browser/layoutService';
 import { IContextMenuService } from 'vs/platform/contextview/browser/contextView';
 import { Disposable } from 'vs/base/common/lifecycle';
-import { EventHelper } from 'vs/base/browser/dom';
+import { EventHelper, shouldContextMenuAppear } from 'vs/base/browser/dom';
 import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from 'vs/workbench/common/contributions';
 import { Registry } from 'vs/platform/registry/common/platform';
 import { LifecyclePhase } from 'vs/platform/lifecycle/common/lifecycle';
@@ -81,7 +81,7 @@ export class TextInputActionsProvider extends Disposable implements IWorkbenchCo
 	}
 
 	private onContextMenu(e: MouseEvent): void {
-		if (e.target instanceof HTMLElement) {
+		if (shouldContextMenuAppear(e) && e.target instanceof HTMLElement) {
 			const target = <HTMLElement>e.target;
 			if (target.nodeName && (target.nodeName.toLowerCase() === 'input' || target.nodeName.toLowerCase() === 'textarea')) {
 				EventHelper.stop(e, true);

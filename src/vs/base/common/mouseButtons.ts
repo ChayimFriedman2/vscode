@@ -144,8 +144,8 @@ export class ResolvedSelectionBinding extends ResolvedKeybinding {
 			this._binding.shiftKey,
 			this._binding.altKey,
 			this._binding.metaKey,
-			this.getLabel(),
-			this.getAriaLabel()
+			MouseButtonUtils.toString(this._binding.button),
+			MouseButtonUtils.toAriaString(this._binding.button)
 		)];
 	}
 

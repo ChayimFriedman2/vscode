@@ -6,6 +6,7 @@
 import { ChordKeybinding, KeyCodeUtils, Keybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
+import { SELECTION_SHORTCUT_PREFIX } from 'vs/base/common/mouseButtons';
 
 export class KeybindingParser {
 

@@ -206,11 +206,6 @@ export const enum KeyCode {
 	MAX_VALUE
 }
 
-/**
- * The prefix used in keybindings.json for selection bindings in order to distinguish them from regular bindings.
- */
-export const SELECTION_SHORTCUT_PREFIX = 'SEL';
-
 class KeyCodeStrMap {
 
 	private _keyCodeToStr: string[];

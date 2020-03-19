@@ -567,7 +567,8 @@ export class ResolvedKeybindingPart {
 	readonly keyLabel: string | null;
 	readonly keyAriaLabel: string | null;
 
-	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, kbLabel: string | null, kbAriaLabel: string | null) {
+	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean,
+		kbLabel: string | null, kbAriaLabel: string | null, public readonly isSelection = false) {
 		this.ctrlKey = ctrlKey;
 		this.shiftKey = shiftKey;
 		this.altKey = altKey;

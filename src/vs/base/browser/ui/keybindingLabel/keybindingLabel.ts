@@ -10,6 +10,7 @@ import { ResolvedKeybinding, ResolvedKeybindingPart } from 'vs/base/common/keyCo
 import { UILabelProvider } from 'vs/base/common/keybindingLabels';
 import * as dom from 'vs/base/browser/dom';
 import { localize } from 'vs/nls';
+import { UiSelectionPrefix } from 'vs/base/common/mouseButtons';
 
 const $ = dom.$;
 
@@ -79,6 +80,9 @@ export class KeybindingLabel {
 
 	private renderPart(parent: HTMLElement, part: ResolvedKeybindingPart, match: PartMatches | null) {
 		const modifierLabels = UILabelProvider.modifierLabels[this.os];
+		if (part.isSelection) {
+			this.renderKey(parent, UiSelectionPrefix, false);
+		}
 		if (part.ctrlKey) {
 			this.renderKey(parent, modifierLabels.ctrlKey, Boolean(match?.ctrlKey), modifierLabels.separator);
 		}
@@ -97,7 +101,7 @@ export class KeybindingLabel {
 		}
 	}
 
-	private renderKey(parent: HTMLElement, label: string, highlight: boolean, separator: string): void {
+	private renderKey(parent: HTMLElement, label: string, highlight: boolean, separator?: string): void {
 		dom.append(parent, $('span.monaco-keybinding-key' + (highlight ? '.highlight' : ''), undefined, label));
 		if (separator) {
 			dom.append(parent, $('span.monaco-keybinding-key-separator', undefined, separator));

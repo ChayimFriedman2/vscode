@@ -18,14 +18,14 @@ export const enum MouseButton {
  * The prefix used in keybindings.json for selection bindings in order to distinguish them from regular bindings.
  */
 export const UserSettingsSelectionPrefix: string = 'sel ';
-const UiSelectionPrefix: string = 'SEL ';
+export const UiSelectionPrefix: string = 'SEL ';
 const AriaSelectionPrefix: string = 'SEL ';
 
-const uiStrToButton: { [key: string]: MouseButton } = { 'lmb': MouseButton.Left, 'mmb': MouseButton.Middle, 'rmb': MouseButton.Right };
+const uiStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
 const uiButtonToStr = ['LMB', 'MMB', 'RMB'];
 const ariaStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
 const ariaButtonToStr = ['LMB', 'MMB', 'RMB'];
-const userSettingsStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
+const userSettingsStrToButton: { [key: string]: MouseButton } = { 'lmb': MouseButton.Left, 'mmb': MouseButton.Middle, 'rmb': MouseButton.Right };
 const userSettingsButtonToStr = ['lmb', 'mmb', 'rmb'];
 
 export namespace MouseButtonUtils {
@@ -145,7 +145,8 @@ export class ResolvedSelectionBinding extends ResolvedKeybinding {
 			this._binding.altKey,
 			this._binding.metaKey,
 			MouseButtonUtils.toString(this._binding.button),
-			MouseButtonUtils.toAriaString(this._binding.button)
+			MouseButtonUtils.toAriaString(this._binding.button),
+			true
 		)];
 	}
 

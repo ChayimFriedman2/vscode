@@ -107,7 +107,7 @@ let keybindingType: IJSONSchema = {
 			description: nls.localize('vscode.extension.contributes.keybindings.args', "Arguments to pass to the command to execute.")
 		},
 		key: {
-			description: nls.localize('vscode.extension.contributes.keybindings.key', 'Key or key sequence (separate keys with plus-sign and sequences with space, e.g. Ctrl+O and Ctrl+L L for a chord).'),
+			markdownDescription: nls.localize('vscode.extension.contributes.keybindings.key', "Key or key sequence (separate keys with plus-sign and sequences with space, e.g. Ctrl+O and Ctrl+L L for a chord).\n\nUse LMB, MMB and RMB for left, right and middle mouse buttons, respectively. E.g. Ctrl+LMB Ctrl+Alt+MMB.\n\nPrefix with 'SEL ' to create a selection shortcut. For example, 'SEL Ctrl+MMB' will trigger the command after selection with middle mouse button while Ctrl is pressed. Selection shortcuts can not be chords."),
 			type: 'string'
 		},
 		mac: {

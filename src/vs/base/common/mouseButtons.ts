@@ -16,9 +16,9 @@ export const enum MouseButton {
 /**
  * The prefix used in keybindings.json for selection bindings in order to distinguish them from regular bindings.
  */
-export const UserSettingsSelectionPrefix = 'sel ';
-const UiSelectionPrefix = 'SEL ';
-const AriaSelectionPrefix = 'SEL ';
+export const UserSettingsSelectionPrefix: string = 'sel ';
+const UiSelectionPrefix: string = 'SEL ';
+const AriaSelectionPrefix: string = 'SEL ';
 
 const strToButton: { [key: string]: MouseButton } = { 'lmb': MouseButton.Left, 'mmb': MouseButton.Middle, 'rmb': MouseButton.Right };
 const buttonToStr = ['lmb', 'mmb', 'rmb'];

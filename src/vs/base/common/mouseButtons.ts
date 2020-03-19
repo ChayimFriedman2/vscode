@@ -16,19 +16,19 @@ export const enum MouseButton {
 /**
  * The prefix used in keybindings.json for selection bindings in order to distinguish them from regular bindings.
  */
-export const UserSettingsSelectionPrefix = 'SEL ';
+export const UserSettingsSelectionPrefix = 'sel ';
 const UiSelectionPrefix = 'SEL ';
 const AriaSelectionPrefix = 'SEL ';
 
-const strToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
-const buttonToStr = ['LMB', 'MMB', 'RMB'];
+const strToButton: { [key: string]: MouseButton } = { 'lmb': MouseButton.Left, 'mmb': MouseButton.Middle, 'rmb': MouseButton.Right };
+const buttonToStr = ['lmb', 'mmb', 'rmb'];
 
 export namespace MouseButtonUtils {
 	export function toString(button: MouseButton): string {
 		return buttonToStr[button];
 	}
 	export function fromString(button: string): MouseButton {
-		return strToButton[button];
+		return strToButton[button.toLowerCase()];
 	}
 
 	export function toKeyCode(button: MouseButton): KeyCode {

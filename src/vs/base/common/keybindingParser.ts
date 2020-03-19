@@ -6,7 +6,7 @@
 import { ChordKeybinding, KeyCodeUtils, Keybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
-import { UserSettingsSelectionPrefix } from 'vs/base/common/mouseButtons';
+import { UserSettingsSelectionPrefix, SelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
 
 export class KeybindingParser {
 
@@ -75,15 +75,27 @@ export class KeybindingParser {
 		};
 	}
 
+	private static parseSelectionBinding(input: string): SelectionBinding {
+		const mods = this._readModifiers(input);
+		const mouseButton = MouseButtonUtils.fromString(mods.key);
+		return new SelectionBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton);
+	}
+
 	private static parseSimpleKeybinding(input: string): [SimpleKeybinding, string] {
 		const mods = this._readModifiers(input);
 		const keyCode = KeyCodeUtils.fromUserSettings(mods.key);
 		return [new SimpleKeybinding(mods.ctrl, mods.shift, mods.alt, mods.meta, keyCode), mods.remains];
 	}
 
-	public static parseKeybinding(input: string, OS: OperatingSystem): Keybinding | null {
+	public static parseKeybinding(input: string, OS: OperatingSystem): Keybinding | SelectionBinding | null {
+		input = input.toLowerCase().trim();
+
 		if (!input) {
 			return null;
+		}
+
+		if (input.startsWith(UserSettingsSelectionPrefix)) {
+			return this.parseSelectionBinding(input);
 		}
 
 		const parts: SimpleKeybinding[] = [];
@@ -108,11 +120,15 @@ export class KeybindingParser {
 		return [new SimpleKeybinding(mods.ctrl, mods.shift, mods.alt, mods.meta, keyCode), mods.remains];
 	}
 
-	static parseUserBinding(input: string): (SimpleKeybinding | ScanCodeBinding)[] {
+	static parseUserBinding(input: string): (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding {
 		input = input.toLowerCase().trim();
 
 		if (!input) {
 			return [];
+		}
+
+		if (input.startsWith(UserSettingsSelectionPrefix)) {
+			return this.parseSelectionBinding(input);
 		}
 
 		const parts: (SimpleKeybinding | ScanCodeBinding)[] = [];

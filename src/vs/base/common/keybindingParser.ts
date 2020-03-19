@@ -10,7 +10,7 @@ import { ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
 export class KeybindingParser {
 
 	private static _readModifiers(input: string) {
-		input = input.toLowerCase().trim();
+		input = input.trimLeft(); // At right we already trimmed the whole input at the beginning - only the left changes
 
 		let ctrl = false;
 		let shift = false;
@@ -108,6 +108,8 @@ export class KeybindingParser {
 	}
 
 	static parseUserBinding(input: string): (SimpleKeybinding | ScanCodeBinding)[] {
+		input = input.toLowerCase().trim();
+
 		if (!input) {
 			return [];
 		}

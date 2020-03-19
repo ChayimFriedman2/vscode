@@ -46,7 +46,7 @@ import { IStorageService } from 'vs/platform/storage/common/storage';
 import { InputBox, MessageType } from 'vs/base/browser/ui/inputbox/inputBox';
 import { Emitter, Event } from 'vs/base/common/event';
 import { MenuRegistry, MenuId, isIMenuItem } from 'vs/platform/actions/common/actions';
-import { SELECTION_SHORTCUT_PREFIX } from 'vs/base/common/mouseButtons';
+import { UserSettingsSelectionPrefix } from 'vs/base/common/mouseButtons';
 
 const $ = DOM.$;
 
@@ -215,7 +215,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		return this.defineKeybindingWidget.define().then(key => {
 			if (key) {
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);
-				return this.updateKeybinding(keybindingEntry, SELECTION_SHORTCUT_PREFIX + key, keybindingEntry.keybindingItem.when);
+				return this.updateKeybinding(keybindingEntry, UserSettingsSelectionPrefix + key, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {

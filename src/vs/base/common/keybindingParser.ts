@@ -88,11 +88,11 @@ export class KeybindingParser {
 	}
 
 	public static parseKeybinding(input: string, OS: OperatingSystem): Keybinding | SelectionBinding | null {
-		input = input.toLowerCase().trim();
-
 		if (!input) {
 			return null;
 		}
+
+		input = input.toLowerCase().trim();
 
 		if (input.startsWith(UserSettingsSelectionPrefix)) {
 			return this.parseSelectionBinding(input);
@@ -121,11 +121,11 @@ export class KeybindingParser {
 	}
 
 	static parseUserBinding(input: string): (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding {
-		input = input.toLowerCase().trim();
-
 		if (!input) {
 			return [];
 		}
+
+		input = input.toLowerCase().trim();
 
 		if (input.startsWith(UserSettingsSelectionPrefix)) {
 			return this.parseSelectionBinding(input);

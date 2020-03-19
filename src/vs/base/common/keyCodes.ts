@@ -391,6 +391,16 @@ export namespace KeyCodeUtils {
 	export function isMouseButton(key: KeyCode): boolean {
 		return KeyCode.MOUSE_LEFT <= key && key <= KeyCode.MOUSE_RIGHT;
 	}
+
+	export function isModifierKey(key: KeyCode): boolean {
+		return (
+			key === KeyCode.Unknown
+			|| key === KeyCode.Ctrl
+			|| key === KeyCode.Meta
+			|| key === KeyCode.Alt
+			|| key === KeyCode.Shift
+		);
+	}
 }
 
 /**
@@ -489,13 +499,7 @@ export class SimpleKeybinding {
 	}
 
 	public isModifierKey(): boolean {
-		return (
-			this.keyCode === KeyCode.Unknown
-			|| this.keyCode === KeyCode.Ctrl
-			|| this.keyCode === KeyCode.Meta
-			|| this.keyCode === KeyCode.Alt
-			|| this.keyCode === KeyCode.Shift
-		);
+		return KeyCodeUtils.isModifierKey(this.keyCode);
 	}
 
 	public toChord(): ChordKeybinding {

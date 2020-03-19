@@ -33,7 +33,7 @@ import { IListVirtualDelegate, IListRenderer, IListContextMenuEvent, IListEvent 
 import { IThemeService, registerThemingParticipant, IColorTheme, ICssStyleCollector } from 'vs/platform/theme/common/themeService';
 import { IContextKeyService, IContextKey, ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
 import { StandardKeyboardEvent, IKeyboardEvent } from 'vs/base/browser/keyboardEvent';
-import { KeyCode, ResolvedKeybinding } from 'vs/base/common/keyCodes';
+import { KeyCode, ResolvedKeybinding, SELECTION_SHORTCUT_PREFIX } from 'vs/base/common/keyCodes';
 import { listHighlightForeground, badgeBackground, contrastBorder, badgeForeground, listActiveSelectionForeground, listInactiveSelectionForeground, listHoverForeground, listFocusForeground, editorBackground } from 'vs/platform/theme/common/colorRegistry';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 import { EditorExtensionsRegistry } from 'vs/editor/browser/editorExtensions';
@@ -207,14 +207,14 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		});
 	}
 
-	defineDrag(keybindingEntry: IKeybindingItemEntry): Promise<any> {
+	defineSelectionBinding(keybindingEntry: IKeybindingItemEntry): Promise<any> {
 		this.selectEntry(keybindingEntry);
 		this.showOverlayContainer();
 		this.defineKeybindingWidget.enableChord = false;
 		return this.defineKeybindingWidget.define().then(key => {
 			if (key) {
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);
-				return this.updateKeybinding(keybindingEntry, `DRAG ${key}`, keybindingEntry.keybindingItem.when);
+				return this.updateKeybinding(keybindingEntry, SELECTION_SHORTCUT_PREFIX + key, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {
@@ -679,7 +679,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 					this.createCopyCommandAction(<IKeybindingItemEntry>e.element),
 					new Separator(),
 					this.createDefineAction(<IKeybindingItemEntry>e.element),
-					this.createDefineDragAction(<IKeybindingItemEntry>e.element),
+					this.createDefineSelectionAction(<IKeybindingItemEntry>e.element),
 					this.createRemoveAction(<IKeybindingItemEntry>e.element),
 					this.createResetAction(<IKeybindingItemEntry>e.element),
 					this.createDefineWhenExpressionAction(<IKeybindingItemEntry>e.element),
@@ -709,12 +709,12 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		};
 	}
 
-	private createDefineDragAction(keybindingItemEntry: IKeybindingItemEntry): IAction {
+	private createDefineSelectionAction(keybindingItemEntry: IKeybindingItemEntry): IAction {
 		return <IAction>{
-			label: keybindingItemEntry.keybindingItem.keybinding ? localize('changeLabelToDrag', "Change Keybinding to Mouse Drag") : localize('addDrag', "Add Mouse Drag Keybinding"),
+			label: keybindingItemEntry.keybindingItem.keybinding ? localize('changeSelection', "Change Selection Binding") : localize('addSelection', "Add Selection Binding"),
 			enabled: true,
 			id: KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG,
-			run: () => this.defineDrag(keybindingItemEntry)
+			run: () => this.defineSelectionBinding(keybindingItemEntry)
 		};
 	}
 

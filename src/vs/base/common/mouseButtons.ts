@@ -21,15 +21,33 @@ export const UserSettingsSelectionPrefix: string = 'sel ';
 const UiSelectionPrefix: string = 'SEL ';
 const AriaSelectionPrefix: string = 'SEL ';
 
-const strToButton: { [key: string]: MouseButton } = { 'lmb': MouseButton.Left, 'mmb': MouseButton.Middle, 'rmb': MouseButton.Right };
-const buttonToStr = ['lmb', 'mmb', 'rmb'];
+const uiStrToButton: { [key: string]: MouseButton } = { 'lmb': MouseButton.Left, 'mmb': MouseButton.Middle, 'rmb': MouseButton.Right };
+const uiButtonToStr = ['LMB', 'MMB', 'RMB'];
+const ariaStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
+const ariaButtonToStr = ['LMB', 'MMB', 'RMB'];
+const userSettingsStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
+const userSettingsButtonToStr = ['lmb', 'mmb', 'rmb'];
 
 export namespace MouseButtonUtils {
 	export function toString(button: MouseButton): string {
-		return buttonToStr[button];
+		return uiButtonToStr[button];
 	}
 	export function fromString(button: string): MouseButton {
-		return strToButton[button.toLowerCase()];
+		return uiStrToButton[button.toLowerCase()];
+	}
+
+	export function toAriaString(button: MouseButton): string {
+		return ariaButtonToStr[button];
+	}
+	export function fromAriaString(button: string): MouseButton {
+		return ariaStrToButton[button.toLowerCase()];
+	}
+
+	export function toUserSettingsString(button: MouseButton): string {
+		return userSettingsButtonToStr[button];
+	}
+	export function fromUserSettingsString(button: string): MouseButton {
+		return userSettingsStrToButton[button.toLowerCase()];
 	}
 
 	export function toKeyCode(button: MouseButton): KeyCode {
@@ -100,7 +118,7 @@ export class ResolvedSelectionBinding extends ResolvedKeybinding {
 	}
 
 	public getAriaLabel(): string | null {
-		return AriaSelectionPrefix + AriaLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toString(binding.button));
+		return AriaSelectionPrefix + AriaLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toAriaString(binding.button));
 	}
 
 	public getElectronAccelerator(): string | null {
@@ -109,7 +127,7 @@ export class ResolvedSelectionBinding extends ResolvedKeybinding {
 	}
 
 	public getUserSettingsLabel(): string | null {
-		return UserSettingsSelectionPrefix + UserSettingsLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toString(binding.button));
+		return UserSettingsSelectionPrefix + UserSettingsLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toUserSettingsString(binding.button));
 	}
 
 	public isWYSIWYG(): boolean {

@@ -78,7 +78,7 @@ export class KeybindingParser {
 	private static parseSelectionBinding(input: string): SelectionBinding {
 		input = input.substr(UserSettingsSelectionPrefix.length).trimRight();
 		const mods = this._readModifiers(input);
-		const mouseButton = MouseButtonUtils.fromString(mods.key);
+		const mouseButton = MouseButtonUtils.fromUserSettingsString(mods.key);
 		return new SelectionBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton);
 	}
 

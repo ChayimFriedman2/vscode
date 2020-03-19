@@ -115,8 +115,6 @@ export class KeybindingsSearchWidget extends SearchWidget {
 		keyboardEvent.preventDefault();
 		keyboardEvent.stopPropagation();
 
-		if (this.recordOnlyMouse) { return; }
-
 		const options = this.options as KeybindingsSearchOptions;
 		if (!options.recordEnter && keyboardEvent.equals(KeyCode.Enter)) {
 			this._onEnter.fire();
@@ -126,6 +124,9 @@ export class KeybindingsSearchWidget extends SearchWidget {
 			this._onEscape.fire();
 			return;
 		}
+
+		if (this.recordOnlyMouse) { return; }
+
 		this.printKeybinding(keyboardEvent);
 	}
 

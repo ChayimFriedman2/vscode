@@ -387,6 +387,10 @@ export namespace KeyCodeUtils {
 	export function fromUserSettings(key: string): KeyCode {
 		return userSettingsUSMap.strToKeyCode(key) || userSettingsGeneralMap.strToKeyCode(key);
 	}
+
+	export function isMouseButton(key: KeyCode): boolean {
+		return KeyCode.MOUSE_LEFT <= key && key <= KeyCode.MOUSE_RIGHT;
+	}
 }
 
 /**

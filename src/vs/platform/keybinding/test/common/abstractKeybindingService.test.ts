@@ -16,6 +16,7 @@ import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayo
 import { INotification, INotificationService, IPromptChoice, IPromptOptions, NoOpNotification, IStatusMessageOptions } from 'vs/platform/notification/common/notification';
 import { NullTelemetryService } from 'vs/platform/telemetry/common/telemetryUtils';
 import { Disposable } from 'vs/base/common/lifecycle';
+import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
 
 function createContext(ctx: any) {
 	return {
@@ -48,8 +49,8 @@ suite('AbstractKeybindingService', () => {
 			return true;
 		}
 
-		public resolveKeybinding(kb: Keybinding): ResolvedKeybinding[] {
-			return [new USLayoutResolvedKeybinding(kb, OS)];
+		public resolveKeybinding(kb: Keybinding | SelectionBinding): ResolvedKeybinding[] {
+			return kb instanceof SelectionBinding ? [new ResolvedSelectionBinding(OS, kb)] : [new USLayoutResolvedKeybinding(kb, OS)];
 		}
 
 		public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {

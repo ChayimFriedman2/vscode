@@ -10,6 +10,7 @@ import { IMMUTABLE_CODE_TO_KEY_CODE, IMMUTABLE_KEY_CODE_TO_CODE, ScanCode, ScanC
 import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
+import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
 
 export interface IMacLinuxKeyMapping {
 	value: string;
@@ -963,7 +964,11 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		return null;
 	}
 
-	public resolveKeybinding(keybinding: Keybinding): NativeResolvedKeybinding[] {
+	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
+		if (keybinding instanceof SelectionBinding) {
+			return [new ResolvedSelectionBinding(this._OS, keybinding)];
+		}
+
 		let chordParts: ScanCodeBinding[][] = [];
 		for (let part of keybinding.parts) {
 			chordParts.push(this.simpleKeybindingToScanCodeBinding(part));
@@ -1067,7 +1072,11 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		return this.simpleKeybindingToScanCodeBinding(binding);
 	}
 
-	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {
+	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding): ResolvedKeybinding[] {
+		if (input instanceof SelectionBinding) {
+			return [new ResolvedSelectionBinding(this._OS, input)];
+		}
+
 		const parts: ScanCodeBinding[][] = input.map(keybinding => this._resolveSimpleUserBinding(keybinding));
 		return this._toResolvedKeybinding(parts);
 	}

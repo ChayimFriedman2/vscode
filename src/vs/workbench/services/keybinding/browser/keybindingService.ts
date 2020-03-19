@@ -48,6 +48,7 @@ import { INavigatorWithKeyboard, IKeyboard } from 'vs/workbench/services/keybind
 import { ScanCode, ScanCodeUtils, IMMUTABLE_CODE_TO_KEY_CODE } from 'vs/base/common/scanCode';
 import { flatten } from 'vs/base/common/arrays';
 import { BrowserFeatures, KeyboardSupport } from 'vs/base/browser/canIUse';
+import { SelectionBinding } from 'vs/base/common/mouseButtons';
 
 interface ContributedKeyBinding {
 	command: string;
@@ -392,7 +393,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		for (const item of items) {
 			const when = item.when || undefined;
 			const parts = item.parts;
-			if (parts.length === 0) {
+			if (!(parts instanceof SelectionBinding) && parts.length === 0) {
 				// This might be a removal keybinding item in user settings => accept it
 				result[resultLen++] = new ResolvedKeybindingItem(undefined, item.command, item.commandArgs, when, isDefault);
 			} else {
@@ -406,12 +407,16 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		return result;
 	}
 
-	private _assertBrowserConflicts(kb: Keybinding, commandId: string): boolean {
+	private _assertBrowserConflicts(kb: Keybinding | SelectionBinding, commandId: string): boolean {
 		if (BrowserFeatures.keyboard === KeyboardSupport.Always) {
 			return false;
 		}
 
 		if (BrowserFeatures.keyboard === KeyboardSupport.FullScreen && browser.isFullscreen()) {
+			return false;
+		}
+
+		if (kb instanceof SelectionBinding) {
 			return false;
 		}
 
@@ -473,7 +478,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		return false;
 	}
 
-	public resolveKeybinding(kb: Keybinding): ResolvedKeybinding[] {
+	public resolveKeybinding(kb: Keybinding | SelectionBinding): ResolvedKeybinding[] {
 		return this._keyboardMapper.resolveKeybinding(kb);
 	}
 

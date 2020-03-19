@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, ResolvedKeybinding, ResolvedKeybindingPart } from 'vs/base/common/keyCodes';
+import { KeyCode, ResolvedKeybinding, ResolvedKeybindingPart, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { UILabelProvider, AriaLabelProvider, UserSettingsLabelProvider } from 'vs/base/common/keybindingLabels';
+import { ScanCodeBinding, ScanCode } from 'vs/base/common/scanCode';
 
 export const enum MouseButton {
 	Left = 0,
@@ -37,6 +38,13 @@ export namespace MouseButtonUtils {
 	export function fromKeyCode(key: KeyCode): MouseButton {
 		return key - KeyCode.MOUSE_LEFT;
 	}
+
+	export function toScanCode(button: MouseButton): ScanCode {
+		return button + ScanCode.MouseLeft;
+	}
+	export function fromScanCode(key: ScanCode): MouseButton {
+		return key - ScanCode.MouseLeft;
+	}
 }
 
 export class SelectionBinding {
@@ -54,14 +62,17 @@ export class SelectionBinding {
 		this.button = button;
 	}
 
-	public equals(other: SelectionBinding): boolean {
-		return (
-			this.ctrlKey === other.ctrlKey
-			&& this.shiftKey === other.shiftKey
-			&& this.altKey === other.altKey
-			&& this.metaKey === other.metaKey
-			&& this.button === other.button
-		);
+	public equals(other: SimpleKeybinding | ScanCodeBinding | SelectionBinding): boolean {
+		if (this.ctrlKey !== other.ctrlKey || this.shiftKey !== other.shiftKey || this.altKey !== other.altKey || this.metaKey !== other.metaKey) {
+			return false;
+		}
+		if (other instanceof SelectionBinding) {
+			return other.button === this.button;
+		} else if (other instanceof SimpleKeybinding) {
+			return MouseButtonUtils.fromKeyCode(other.keyCode) === this.button;
+		} else {
+			return MouseButtonUtils.fromScanCode(other.scanCode) === this.button;
+		}
 	}
 
 	public getHashCode(): string {

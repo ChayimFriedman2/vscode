@@ -10,6 +10,7 @@ import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybi
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
+import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
 
 /**
  * A keyboard mapper to be used when reading the keymap from the OS fails.
@@ -29,8 +30,10 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 		return 'FallbackKeyboardMapper dispatching on keyCode';
 	}
 
-	public resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[] {
-		return [new USLayoutResolvedKeybinding(keybinding, this._OS)];
+	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
+		return keybinding instanceof SelectionBinding ?
+			[new ResolvedSelectionBinding(this._OS, keybinding)] :
+			[new USLayoutResolvedKeybinding(keybinding, this._OS)];
 	}
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
@@ -129,7 +132,11 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 		return new SimpleKeybinding(binding.ctrlKey, binding.shiftKey, binding.altKey, binding.metaKey, keyCode);
 	}
 
-	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {
+	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding): ResolvedKeybinding[] {
+		if (input instanceof SelectionBinding) {
+			return [new ResolvedSelectionBinding(this._OS, input)];
+		}
+
 		const parts: SimpleKeybinding[] = removeElementsAfterNulls(input.map(keybinding => this._resolveSimpleUserBinding(keybinding)));
 		if (parts.length > 0) {
 			return [new USLayoutResolvedKeybinding(new ChordKeybinding(parts), this._OS)];

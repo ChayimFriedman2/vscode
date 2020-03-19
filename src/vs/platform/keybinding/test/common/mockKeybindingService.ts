@@ -11,6 +11,7 @@ import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IMouseEvent } fro
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
+import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
 
 class MockKeybindingContextKey<T> implements IContextKey<T> {
 	private _defaultValue: T | undefined;
@@ -89,8 +90,10 @@ export class MockKeybindingService implements IKeybindingService {
 		return [];
 	}
 
-	public resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[] {
-		return [new USLayoutResolvedKeybinding(keybinding, OS)];
+	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
+		return keybinding instanceof SelectionBinding ?
+			[new ResolvedSelectionBinding(OS, keybinding)] :
+			[new USLayoutResolvedKeybinding(keybinding, OS)];
 	}
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {

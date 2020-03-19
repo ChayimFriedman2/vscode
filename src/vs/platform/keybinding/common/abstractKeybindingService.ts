@@ -17,6 +17,7 @@ import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKe
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from 'vs/base/common/actions';
+import { SelectionBinding } from 'vs/base/common/mouseButtons';
 
 interface CurrentChord {
 	keypress: string;
@@ -58,7 +59,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	protected abstract _getResolver(): KeybindingResolver;
 	protected abstract _documentHasFocus(): boolean;
-	public abstract resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[];
+	public abstract resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[];
 	public abstract resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 	public abstract resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding;
 	public abstract resolveUserBinding(userBinding: string): ResolvedKeybinding[];

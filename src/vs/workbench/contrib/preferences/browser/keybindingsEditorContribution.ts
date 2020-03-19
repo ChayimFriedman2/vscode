@@ -33,6 +33,7 @@ import { equals } from 'vs/base/common/arrays';
 import { assertIsDefined } from 'vs/base/common/types';
 import { IEnvironmentService } from 'vs/platform/environment/common/environment';
 import { isEqual } from 'vs/base/common/resources';
+import { SelectionBinding } from 'vs/base/common/mouseButtons';
 
 const NLS_LAUNCH_MESSAGE = nls.localize('defineKeybinding.start', "Define Keybinding");
 const NLS_KB_LAYOUT_ERROR_MESSAGE = nls.localize('defineKeybinding.kbLayoutErrorMessage', "You won't be able to produce this key combination under your current keyboard layout.");
@@ -264,15 +265,38 @@ export class KeybindingEditorDecorationsRenderer extends Disposable {
 
 		const aParts = KeybindingParser.parseUserBinding(a);
 		const bParts = KeybindingParser.parseUserBinding(b);
-		return equals(aParts, bParts, (a, b) => this._userBindingEquals(a, b));
+		if (aParts instanceof SelectionBinding) {
+			return this._selectionBindingEqualTo(aParts, bParts);
+		} else if (bParts instanceof SelectionBinding) {
+			return this._selectionBindingEqualTo(bParts, aParts);
+		} else {
+			return equals(aParts, bParts, (a, b) => this._userBindingEquals(a, b));
+		}
 	}
 
-	private static _userBindingEquals(a: SimpleKeybinding | ScanCodeBinding, b: SimpleKeybinding | ScanCodeBinding): boolean {
+	private static _selectionBindingEqualTo(selectionBinding: SelectionBinding, other: (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding): boolean {
+		if (other instanceof SelectionBinding) {
+			return this._userBindingEquals(selectionBinding, other);
+		} else if (other.length === 1) {
+			return this._userBindingEquals(selectionBinding, other[0]);
+		} else {
+			return false;
+		}
+	}
+
+	private static _userBindingEquals(a: SimpleKeybinding | ScanCodeBinding | SelectionBinding, b: SimpleKeybinding | ScanCodeBinding | SelectionBinding): boolean {
 		if (a === null && b === null) {
 			return true;
 		}
 		if (!a || !b) {
 			return false;
+		}
+
+		if (a instanceof SelectionBinding) {
+			return a.equals(b);
+		}
+		if (b instanceof SelectionBinding) {
+			return b.equals(a);
 		}
 
 		if (a instanceof SimpleKeybinding && b instanceof SimpleKeybinding) {

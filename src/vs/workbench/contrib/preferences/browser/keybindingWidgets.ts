@@ -39,6 +39,8 @@ export class KeybindingsSearchWidget extends SearchWidget {
 
 	/** When set to false, chord recording is not enabled. */
 	enableChord: boolean = true;
+	/** When set to true, keys are not recorded - only modifiers and mouse buttons. */
+	recordOnlyMouse: boolean = false;
 
 	private readonly recordDisposables = this._register(new DisposableStore());
 
@@ -112,6 +114,9 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	private _onKeyDown(keyboardEvent: IKeyboardEvent): void {
 		keyboardEvent.preventDefault();
 		keyboardEvent.stopPropagation();
+
+		if (this.recordOnlyMouse) { return; }
+
 		const options = this.options as KeybindingsSearchOptions;
 		if (!options.recordEnter && keyboardEvent.equals(KeyCode.Enter)) {
 			this._onEnter.fire();
@@ -273,6 +278,14 @@ export class DefineKeybindingWidget extends Widget {
 	}
 	public set enableChord(value: boolean) {
 		this._keybindingInputWidget.enableChord = value;
+	}
+
+	/** When set to true, keys are not recorded - only modifiers and mouse buttons. */
+	public get recordOnlyMouse(): boolean {
+		return this._keybindingInputWidget.recordOnlyMouse;
+	}
+	public set recordOnlyMouse(value: boolean) {
+		this._keybindingInputWidget.recordOnlyMouse = value;
 	}
 
 

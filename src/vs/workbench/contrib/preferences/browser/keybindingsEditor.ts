@@ -210,8 +210,9 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 
 	defineSelectionBinding(keybindingEntry: IKeybindingItemEntry): Promise<any> {
 		this.selectEntry(keybindingEntry);
-		this.showOverlayContainer();
 		this.defineKeybindingWidget.enableChord = false;
+		this.defineKeybindingWidget.recordOnlyMouse = true;
+		this.showOverlayContainer();
 		return this.defineKeybindingWidget.define().then(key => {
 			if (key) {
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);
@@ -219,8 +220,9 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 			}
 			return null;
 		}).then(() => {
-			this.defineKeybindingWidget.enableChord = true;
 			this.hideOverlayContainer();
+			this.defineKeybindingWidget.enableChord = true;
+			this.defineKeybindingWidget.recordOnlyMouse = false;
 			this.selectEntry(keybindingEntry);
 		}, error => {
 			this.defineKeybindingWidget.enableChord = true;

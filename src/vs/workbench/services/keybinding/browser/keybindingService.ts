@@ -48,7 +48,7 @@ import { INavigatorWithKeyboard, IKeyboard } from 'vs/workbench/services/keybind
 import { ScanCode, ScanCodeUtils, IMMUTABLE_CODE_TO_KEY_CODE } from 'vs/base/common/scanCode';
 import { flatten } from 'vs/base/common/arrays';
 import { BrowserFeatures, KeyboardSupport } from 'vs/base/browser/canIUse';
-import { SelectionBinding } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
 
 interface ContributedKeyBinding {
 	command: string;
@@ -251,6 +251,11 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 			if (shouldPreventDefault) {
 				keyEvent.preventDefault();
 			}
+		}));
+
+		this._register(dom.addDisposableListener(window, dom.EventType.MOUSE_DOWN, (e: MouseEvent) => {
+			const mouseEvent = new StandardMouseEvent(e);
+			this._startSelection(mouseEvent, mouseEvent.target);
 		}));
 
 		this._register(dom.addDisposableListener(window, dom.EventType.MOUSE_UP, (e: MouseEvent) => {
@@ -490,6 +495,11 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
 		// this.keymapService.validateCurrentKeyboardMapping(mouseEvent);
 		return this._keyboardMapper.resolveMouseEvent(mouseEvent);
+	}
+
+	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
+		// this.keymapService.validateCurrentKeyboardMapping(mouseEvent);
+		return this._keyboardMapper.resolveSelectionEvent(mouseEvent);
 	}
 
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {

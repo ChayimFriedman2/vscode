@@ -17,7 +17,7 @@ import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKe
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from 'vs/base/common/actions';
-import { SelectionBinding } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, MouseButton, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
 
 interface CurrentChord {
 	keypress: string;
@@ -35,6 +35,12 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 	private _currentChord: CurrentChord | null;
 	private _currentChordChecker: IntervalTimer;
 	private _currentChordStatusMessage: IDisposable | null;
+
+	/**
+	 * If the user dragging the mouse in selection shortcut, this is the dragged mouse button.
+	 * If not, this is -1.
+	 */
+	private _selectingMouseButton: MouseButton = -1;
 
 	public get inChordMode(): boolean {
 		return !!this._currentChord;
@@ -62,6 +68,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 	public abstract resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[];
 	public abstract resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 	public abstract resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding;
+	public abstract resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding;
 	public abstract resolveUserBinding(userBinding: string): ResolvedKeybinding[];
 	public abstract registerSchemaContribution(contribution: KeybindingsSchemaContribution): void;
 	public abstract _dumpDebugInfo(): string;
@@ -165,27 +172,49 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		return this._doDispatch(this.resolveMouseEvent(e), target);
 	}
 
-	private _doDispatch(keybinding: ResolvedKeybinding, target: IContextKeyServiceTarget): boolean {
-		let shouldPreventDefault = false;
+	private inSelectionMode(): boolean {
+		return this._selectingMouseButton !== -1;
+	}
 
+	protected _startSelection(e: IMouseEvent, target: IContextKeyServiceTarget): void {
+		if (this.inSelectionMode() || this.inChordMode) {
+			// To keep consistency with the keys behavior, we want to not consider another shortcut if we're in chord mode
+			return;
+		}
+
+		const keybinding = this.resolveSelectionEvent(e);
+		const resolveResult = this._getCommand(keybinding, target);
+		if (resolveResult) {
+			// Don't need to check resolveResult.enterChord because selections cannot be chords
+			this._selectingMouseButton = MouseButtonUtils.fromKeyCode(e.keyCode);
+		}
+	}
+
+	private _getCommand(keybinding: ResolvedKeybinding, target: IContextKeyServiceTarget): IResolveResult | null {
 		if (keybinding.isChord()) {
 			console.warn('Unexpected keyboard event mapped to a chord');
-			return false;
+			return null;
 		}
 		const [firstPart,] = keybinding.getDispatchParts();
 		if (firstPart === null) {
 			// cannot be dispatched, probably only modifier keys
-			return shouldPreventDefault;
+			return null;
 		}
 
 		const contextValue = this._contextKeyService.getContext(target);
 		const currentChord = this._currentChord ? this._currentChord.keypress : null;
+		return this._getResolver().resolve(contextValue, currentChord, firstPart);
+	}
+
+	private _doDispatch(keybinding: ResolvedKeybinding, target: IContextKeyServiceTarget): boolean {
+		let shouldPreventDefault = false;
+
 		const keypressLabel = keybinding.getLabel();
-		const resolveResult = this._getResolver().resolve(contextValue, currentChord, firstPart);
+		const resolveResult = this._getCommand(keybinding, target);
 
 		if (resolveResult && resolveResult.enterChord) {
 			shouldPreventDefault = true;
-			this._enterChordMode(firstPart, keypressLabel);
+			this._enterChordMode(keybinding.getDispatchParts()[0]!, keypressLabel);
 			return shouldPreventDefault;
 		}
 

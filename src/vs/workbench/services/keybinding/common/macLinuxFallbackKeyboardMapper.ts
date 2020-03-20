@@ -10,7 +10,7 @@ import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybi
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
 
 /**
  * A keyboard mapper to be used when reading the keymap from the OS fails.
@@ -56,6 +56,11 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 			mouseEvent.keyCode
 		);
 		return new USLayoutResolvedKeybinding(keybinding.toChord(), this._OS);
+	}
+
+	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
+		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
+		return new ResolvedSelectionBinding(this._OS, binding);
 	}
 
 	private _scanCodeToKeyCode(scanCode: ScanCode): KeyCode {

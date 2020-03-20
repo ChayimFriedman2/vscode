@@ -10,7 +10,7 @@ import { IMMUTABLE_CODE_TO_KEY_CODE, IMMUTABLE_KEY_CODE_TO_CODE, ScanCode, ScanC
 import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
 
 export interface IMacLinuxKeyMapping {
 	value: string;
@@ -1060,6 +1060,11 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		const code = IMMUTABLE_KEY_CODE_TO_CODE[mouseEvent.keyCode];
 		const keypress = new ScanCodeBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, code);
 		return new NativeResolvedKeybinding(this, this._OS, [keypress]);
+	}
+
+	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
+		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
+		return new ResolvedSelectionBinding(this._OS, binding);
 	}
 
 	private _resolveSimpleUserBinding(binding: SimpleKeybinding | ScanCodeBinding | null): ScanCodeBinding[] {

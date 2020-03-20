@@ -16,7 +16,7 @@ import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayo
 import { INotification, INotificationService, IPromptChoice, IPromptOptions, NoOpNotification, IStatusMessageOptions } from 'vs/platform/notification/common/notification';
 import { NullTelemetryService } from 'vs/platform/telemetry/common/telemetryUtils';
 import { Disposable } from 'vs/base/common/lifecycle';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
 
 function createContext(ctx: any) {
 	return {
@@ -73,6 +73,11 @@ suite('AbstractKeybindingService', () => {
 				mouseEvent.keyCode
 			).toChord();
 			return this.resolveKeybinding(keybinding)[0];
+		}
+
+		public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
+			const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
+			return new ResolvedSelectionBinding(OS, binding);
 		}
 
 		public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {

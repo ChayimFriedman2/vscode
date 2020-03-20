@@ -12,7 +12,7 @@ import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybi
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
 
 export interface IWindowsKeyMapping {
 	vkey: string;
@@ -483,6 +483,11 @@ export class WindowsKeyboardMapper implements IKeyboardMapper {
 	public resolveMouseEvent(mouseEvent: IMouseEvent): WindowsNativeResolvedKeybinding {
 		const keybinding = new SimpleKeybinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.keyCode);
 		return new WindowsNativeResolvedKeybinding(this, [keybinding]);
+	}
+
+	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
+		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
+		return new ResolvedSelectionBinding(OperatingSystem.Windows, binding);
 	}
 
 	private _resolveSimpleUserBinding(binding: SimpleKeybinding | ScanCodeBinding | null): SimpleKeybinding | null {

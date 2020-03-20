@@ -47,7 +47,7 @@ import { SimpleServicesNLS } from 'vs/editor/common/standaloneStrings';
 import { ClassifiedEvent, StrictPropertyCheck, GDPRClassification } from 'vs/platform/telemetry/common/gdprTypings';
 import { basename } from 'vs/base/common/resources';
 import { ICodeEditorService } from 'vs/editor/browser/services/codeEditorService';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
 
 export class SimpleModel implements IResolvedTextEditorModel {
 
@@ -407,6 +407,11 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
 			mouseEvent.keyCode
 		).toChord();
 		return new USLayoutResolvedKeybinding(keybinding, OS);
+	}
+
+	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
+		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
+		return new ResolvedSelectionBinding(OS, binding);
 	}
 
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {

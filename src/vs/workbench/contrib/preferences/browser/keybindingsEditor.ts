@@ -202,7 +202,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		return this.defineKeybindingWidget.define().then(key => {
 			if (key) {
 				if (!this._isValidMouseBinding(key)) {
-					return Promise.reject(new Error(localize('cannotUserLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
+					return Promise.reject(new Error(localize('cannotBindLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
 				}
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE, keybindingEntry.keybindingItem.command, key);
 				return this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when);
@@ -227,7 +227,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		return this.defineKeybindingWidget.define().then(key => {
 			if (key) {
 				if (!this._isValidMouseBinding(key)) {
-					return Promise.reject(new Error(localize('cannotUserLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
+					return Promise.reject(new Error(localize('cannotBindLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
 				}
 				key = UserSettingsSelectionPrefix + key;
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);

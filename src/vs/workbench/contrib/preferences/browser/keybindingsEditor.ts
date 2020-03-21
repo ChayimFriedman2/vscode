@@ -229,8 +229,9 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 				if (!this._isValidMouseBinding(key)) {
 					return Promise.reject(new Error(localize('cannotUserLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
 				}
+				key = UserSettingsSelectionPrefix + key;
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);
-				return this.updateKeybinding(keybindingEntry, UserSettingsSelectionPrefix + key, keybindingEntry.keybindingItem.when);
+				return this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {

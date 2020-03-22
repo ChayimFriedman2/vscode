@@ -229,13 +229,13 @@ export class MouseHandler extends ViewEventHandler {
 		};
 
 		if (targetIsContent || (targetIsLineNumbers && selectOnLineNumbers)) {
-			if (shouldHandle) {
-				focus();
-				this._mouseDownOperation.start(t.type, e);
-			} else if (this.keybindingService.startSelection(e, e.target)) {
+			if (this.keybindingService.startSelection(e, e.target)) {
 				focus();
 				this._mouseDownOperation.startSelection(t.type, e,
 					() => this.keybindingService.cancelSelection(), () => this.keybindingService.endSelection());
+			} else if (shouldHandle) {
+				focus();
+				this._mouseDownOperation.start(t.type, e);
 			}
 		} else if (targetIsGutter) {
 			// Do not steal focus

@@ -30,6 +30,10 @@ export interface IOnStopCallback {
 	(): void;
 }
 
+export interface IOnCancelCallback {
+	(): void;
+}
+
 export interface IOnCompleteCallback {
 	(): void;
 }
@@ -51,14 +55,15 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 	private _mouseMoveEventMerger: IEventMerger<R> | null = null;
 	private _mouseMoveCallback: IMouseMoveCallback<R> | null = null;
 	private _onStopCallback: IOnStopCallback | null = null;
-	private _onCompleteCallback: IOnStopCallback | null = null;
+	private _onCancelCallback: IOnCancelCallback | null = null;
+	private _onCompleteCallback: IOnCompleteCallback | null = null;
 
 	public dispose(): void {
 		this.stopMonitoring(false);
 		this._hooks.dispose();
 	}
 
-	public stopMonitoring(invokeStopCallback: boolean, invokeCompleteCallback: boolean = false): void {
+	public stopMonitoring(invokeStopCallback: boolean, completed: boolean = false): void {
 		if (!this.isMonitoring()) {
 			// Not monitoring
 			return;
@@ -72,9 +77,13 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 		this._onStopCallback = null;
 		const onCompleteCallback = this._onCompleteCallback;
 		this._onCompleteCallback = null;
+		const onCancelCallback = this._onCancelCallback;
+		this._onCancelCallback = null;
 
-		if (invokeCompleteCallback && onCompleteCallback) {
+		if (completed && onCompleteCallback) {
 			onCompleteCallback();
+		} else if (!completed && onCancelCallback) {
+			onCancelCallback();
 		}
 		if (invokeStopCallback && onStopCallback) {
 			onStopCallback();
@@ -91,6 +100,7 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 		mouseMoveEventMerger: IEventMerger<R>,
 		mouseMoveCallback: IMouseMoveCallback<R>,
 		onStopCallback: IOnStopCallback,
+		onCancelCallback?: IOnCancelCallback,
 		onCompleteCallback?: IOnCompleteCallback
 	): void {
 		if (this.isMonitoring()) {
@@ -100,6 +110,7 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 		this._mouseMoveEventMerger = mouseMoveEventMerger;
 		this._mouseMoveCallback = mouseMoveCallback;
 		this._onStopCallback = onStopCallback;
+		this._onCancelCallback = withUndefinedAsNull(onCancelCallback);
 		this._onCompleteCallback = withUndefinedAsNull(onCompleteCallback);
 
 		const windowChain = IframeUtils.getSameOriginWindowChain();

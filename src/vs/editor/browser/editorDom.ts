@@ -188,6 +188,7 @@ export class GlobalEditorMouseMoveMonitor extends Disposable {
 		merger: EditorMouseEventMerger,
 		mouseMoveCallback: (e: EditorMouseEvent) => void,
 		onStopCallback: () => void,
+		onCancelCallback?: () => void,
 		onCompleteCallback?: () => void
 	): void {
 
@@ -209,6 +210,6 @@ export class GlobalEditorMouseMoveMonitor extends Disposable {
 		this._globalMouseMoveMonitor.startMonitoring(initialElement, initialButtons, myMerger, mouseMoveCallback, () => {
 			this._keydownListener!.dispose();
 			onStopCallback();
-		}, onCompleteCallback);
+		}, onCancelCallback, onCompleteCallback);
 	}
 }

@@ -228,10 +228,15 @@ export class MouseHandler extends ViewEventHandler {
 			this.viewHelper.focusTextArea();
 		};
 
-		if (shouldHandle && (targetIsContent || (targetIsLineNumbers && selectOnLineNumbers))) {
-			focus();
-			this._mouseDownOperation.start(t.type, e);
-
+		if (targetIsContent || (targetIsLineNumbers && selectOnLineNumbers)) {
+			if (shouldHandle) {
+				focus();
+				this._mouseDownOperation.start(t.type, e);
+			} else if (this.keybindingService.startSelection(e)) {
+				focus();
+				this._mouseDownOperation.startSelection(t.type, e,
+					() => this.keybindingService.cancelSelection(), () => this.keybindingService.endSelection());
+			}
 		} else if (targetIsGutter) {
 			// Do not steal focus
 			e.preventDefault();
@@ -390,6 +395,33 @@ class MouseDownOperation extends Disposable {
 				() => this._stop()
 			);
 		}
+	}
+
+	public startSelection(targetType: MouseTargetType, e: EditorMouseEvent, onCancel: () => void, onFinish: () => void): void {
+		this._lastMouseEvent = e;
+
+		this._mouseState.setStartedOnLineNumbers(targetType === MouseTargetType.GUTTER_LINE_NUMBERS);
+		this._mouseState.setStartButtons(e);
+		this._mouseState.setModifiers(e);
+		const position = this._findMousePosition(e, true);
+		if (!position || !position.position) {
+			// Ignoring because position is unknown
+			return;
+		}
+
+		this._mouseState.isDragAndDrop = false;
+		this._dispatchMouse(position, false);
+
+		this._isActive = true;
+		this._mouseMoveMonitor.startMonitoring(
+			e.target,
+			e.buttons,
+			createMouseMoveEventMerger(null),
+			(e) => this._onMouseDownThenMove(e),
+			() => this._stop(),
+			onCancel,
+			onFinish
+		);
 	}
 
 	private _stop(): void {

@@ -80,6 +80,10 @@ export interface IKeybindingService {
 	 * @returns Promise that will fulfilled when the command execution was finished, either successfully or with failure.
 	 */
 	endSelection(): Thenable<void>;
+	/**
+	 * Ends the current selection without executing the bound command.
+	 */
+	cancelSelection(): void;
 
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 

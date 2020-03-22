@@ -68,6 +68,19 @@ export interface IKeybindingService {
 	 */
 	resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[];
 
+	/**
+	 * Starts a selection shortcut if found one.
+	 * @param mouseEvent The mouse down event started the selection.
+	 * @returns true if found a shortcut that matches the event.
+	 */
+	startSelection(mouseEvent: IMouseEvent): boolean;
+	/**
+	 * Ends the current selection and executes the bound command.
+	 * Should be called while the text is selected in the editor.
+	 * @returns Promise that will fulfilled when the command execution was finished, either successfully or with failure.
+	 */
+	endSelection(): Thenable<void>;
+
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 
 	resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding;

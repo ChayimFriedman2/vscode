@@ -13,6 +13,7 @@ import { EditorMouseEvent, EditorPointerEventFactory } from 'vs/editor/browser/e
 import { ViewController } from 'vs/editor/browser/view/viewController';
 import { ViewContext } from 'vs/editor/common/view/viewContext';
 import { BrowserFeatures } from 'vs/base/browser/canIUse';
+import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
 
 interface IThrottledGestureEvent {
 	translationX: number;
@@ -39,8 +40,8 @@ class MsPointerHandler extends MouseHandler implements IDisposable {
 	private _lastPointerType: string;
 	private _installGestureHandlerTimeout: number;
 
-	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper) {
-		super(context, viewController, viewHelper);
+	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper, keybindingService: IKeybindingService) {
+		super(context, viewController, viewHelper, keybindingService);
 
 		this.viewHelper.linesContentDomNode.style.msTouchAction = 'none';
 		this.viewHelper.linesContentDomNode.style.msContentZooming = 'none';
@@ -117,8 +118,8 @@ class StandardPointerHandler extends MouseHandler implements IDisposable {
 	private _lastPointerType: string;
 	private _installGestureHandlerTimeout: number;
 
-	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper) {
-		super(context, viewController, viewHelper);
+	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper, keybindingService: IKeybindingService) {
+		super(context, viewController, viewHelper, keybindingService);
 
 		this.viewHelper.linesContentDomNode.style.touchAction = 'none';
 
@@ -192,8 +193,8 @@ class StandardPointerHandler extends MouseHandler implements IDisposable {
  */
 export class PointerEventHandler extends MouseHandler {
 	private _lastPointerType: string;
-	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper) {
-		super(context, viewController, viewHelper);
+	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper, keybindingService: IKeybindingService) {
+		super(context, viewController, viewHelper, keybindingService);
 
 		this._register(Gesture.addTarget(this.viewHelper.linesContentDomNode));
 		this._register(dom.addDisposableListener(this.viewHelper.linesContentDomNode, EventType.Tap, (e) => this.onTap(e)));
@@ -270,8 +271,8 @@ export class PointerEventHandler extends MouseHandler {
 
 class TouchHandler extends MouseHandler {
 
-	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper) {
-		super(context, viewController, viewHelper);
+	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper, keybindingService: IKeybindingService) {
+		super(context, viewController, viewHelper, keybindingService);
 
 		this._register(Gesture.addTarget(this.viewHelper.linesContentDomNode));
 
@@ -300,18 +301,23 @@ class TouchHandler extends MouseHandler {
 export class PointerHandler extends Disposable {
 	private readonly handler: MouseHandler;
 
-	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper) {
+	constructor(
+		context: ViewContext,
+		viewController: ViewController,
+		viewHelper: IPointerHandlerHelper,
+		@IKeybindingService keybindingService: IKeybindingService
+	) {
 		super();
 		if (window.navigator.msPointerEnabled) {
-			this.handler = this._register(new MsPointerHandler(context, viewController, viewHelper));
+			this.handler = this._register(new MsPointerHandler(context, viewController, viewHelper, keybindingService));
 		} else if ((platform.isIOS && BrowserFeatures.pointerEvents)) {
-			this.handler = this._register(new PointerEventHandler(context, viewController, viewHelper));
+			this.handler = this._register(new PointerEventHandler(context, viewController, viewHelper, keybindingService));
 		} else if ((<any>window).TouchEvent) {
-			this.handler = this._register(new TouchHandler(context, viewController, viewHelper));
+			this.handler = this._register(new TouchHandler(context, viewController, viewHelper, keybindingService));
 		} else if (window.navigator.pointerEnabled || (<any>window).PointerEvent) {
-			this.handler = this._register(new StandardPointerHandler(context, viewController, viewHelper));
+			this.handler = this._register(new StandardPointerHandler(context, viewController, viewHelper, keybindingService));
 		} else {
-			this.handler = this._register(new MouseHandler(context, viewController, viewHelper));
+			this.handler = this._register(new MouseHandler(context, viewController, viewHelper, keybindingService));
 		}
 	}
 

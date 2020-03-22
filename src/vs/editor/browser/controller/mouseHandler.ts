@@ -21,6 +21,7 @@ import { ViewContext } from 'vs/editor/common/view/viewContext';
 import * as viewEvents from 'vs/editor/common/view/viewEvents';
 import { ViewEventHandler } from 'vs/editor/common/viewModel/viewEventHandler';
 import { EditorOption } from 'vs/editor/common/config/editorOptions';
+import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
 
 /**
  * Merges mouse events when mouse move events are throttled
@@ -72,7 +73,12 @@ export class MouseHandler extends ViewEventHandler {
 	protected readonly _mouseDownOperation: MouseDownOperation;
 	private lastMouseLeaveTime: number;
 
-	constructor(context: ViewContext, viewController: ViewController, viewHelper: IPointerHandlerHelper) {
+	constructor(
+		context: ViewContext,
+		viewController: ViewController,
+		viewHelper: IPointerHandlerHelper,
+		private readonly keybindingService: IKeybindingService
+	) {
 		super();
 
 		this._context = context;

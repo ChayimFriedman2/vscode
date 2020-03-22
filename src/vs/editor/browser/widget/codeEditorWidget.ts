@@ -247,7 +247,7 @@ export class CodeEditorWidget extends Disposable implements editorBrowser.ICodeE
 		@IContextKeyService contextKeyService: IContextKeyService,
 		@IThemeService themeService: IThemeService,
 		@INotificationService notificationService: INotificationService,
-		@IAccessibilityService accessibilityService: IAccessibilityService
+		@IAccessibilityService accessibilityService: IAccessibilityService,
 	) {
 		super();
 		this._domElement = domElement;
@@ -1574,7 +1574,8 @@ export class CodeEditorWidget extends Disposable implements editorBrowser.ICodeE
 		viewOutgoingEvents.onMouseWheel = (e) => this._onMouseWheel.fire(e);
 		viewOutgoingEvents.onKeyDown = (e) => this._onKeyDown.fire(e);
 
-		const view = new View(
+		const view = this._instantiationService.createInstance(
+			View,
 			commandDelegate,
 			this._configuration,
 			this._themeService,

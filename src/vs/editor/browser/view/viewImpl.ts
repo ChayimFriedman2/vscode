@@ -50,7 +50,7 @@ import { IViewModel } from 'vs/editor/common/viewModel/viewModel';
 import { IThemeService, getThemeTypeSelector } from 'vs/platform/theme/common/themeService';
 import { EditorOption } from 'vs/editor/common/config/editorOptions';
 import { PointerHandlerLastRenderData } from 'vs/editor/browser/controller/mouseTarget';
-
+import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 
 export interface IContentWidgetData {
 	widget: IContentWidget;
@@ -99,7 +99,8 @@ export class View extends ViewEventHandler {
 		themeService: IThemeService,
 		model: IViewModel,
 		cursor: Cursor,
-		outgoingEvents: ViewOutgoingEvents
+		outgoingEvents: ViewOutgoingEvents,
+		@IInstantiationService instantiationService: IInstantiationService
 	) {
 		super();
 		this._cursor = cursor;
@@ -222,7 +223,7 @@ export class View extends ViewEventHandler {
 		this._applyLayout();
 
 		// Pointer handler
-		this.pointerHandler = this._register(new PointerHandler(this._context, viewController, this.createPointerHandlerHelper()));
+		this.pointerHandler = this._register(instantiationService.createInstance(PointerHandler, this._context, viewController, this.createPointerHandlerHelper()));
 
 		this._register(model.addEventListener((events: viewEvents.ViewEvent[]) => {
 			this.eventDispatcher.emitMany(events);

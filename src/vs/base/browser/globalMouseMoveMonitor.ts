@@ -9,6 +9,7 @@ import { IframeUtils } from 'vs/base/browser/iframe';
 import { StandardMouseEvent } from 'vs/base/browser/mouseEvent';
 import { IDisposable, DisposableStore } from 'vs/base/common/lifecycle';
 import { BrowserFeatures } from 'vs/base/browser/canIUse';
+import { withUndefinedAsNull } from 'vs/base/common/types';
 
 export interface IStandardMouseMoveEventData {
 	leftButton: boolean;
@@ -29,6 +30,10 @@ export interface IOnStopCallback {
 	(): void;
 }
 
+export interface IOnCompleteCallback {
+	(): void;
+}
+
 export function standardMouseMoveMerger(lastEvent: IStandardMouseMoveEventData | null, currentEvent: MouseEvent): IStandardMouseMoveEventData {
 	let ev = new StandardMouseEvent(currentEvent);
 	ev.preventDefault();
@@ -46,13 +51,14 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 	private _mouseMoveEventMerger: IEventMerger<R> | null = null;
 	private _mouseMoveCallback: IMouseMoveCallback<R> | null = null;
 	private _onStopCallback: IOnStopCallback | null = null;
+	private _onCompleteCallback: IOnStopCallback | null = null;
 
 	public dispose(): void {
 		this.stopMonitoring(false);
 		this._hooks.dispose();
 	}
 
-	public stopMonitoring(invokeStopCallback: boolean): void {
+	public stopMonitoring(invokeStopCallback: boolean, invokeCompleteCallback: boolean = false): void {
 		if (!this.isMonitoring()) {
 			// Not monitoring
 			return;
@@ -64,7 +70,12 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 		this._mouseMoveCallback = null;
 		const onStopCallback = this._onStopCallback;
 		this._onStopCallback = null;
+		const onCompleteCallback = this._onCompleteCallback;
+		this._onCompleteCallback = null;
 
+		if (invokeCompleteCallback && onCompleteCallback) {
+			onCompleteCallback();
+		}
 		if (invokeStopCallback && onStopCallback) {
 			onStopCallback();
 		}
@@ -79,7 +90,8 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 		initialButtons: number,
 		mouseMoveEventMerger: IEventMerger<R>,
 		mouseMoveCallback: IMouseMoveCallback<R>,
-		onStopCallback: IOnStopCallback
+		onStopCallback: IOnStopCallback,
+		onCompleteCallback?: IOnCompleteCallback
 	): void {
 		if (this.isMonitoring()) {
 			// I am already hooked
@@ -88,6 +100,7 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 		this._mouseMoveEventMerger = mouseMoveEventMerger;
 		this._mouseMoveCallback = mouseMoveCallback;
 		this._onStopCallback = onStopCallback;
+		this._onCompleteCallback = withUndefinedAsNull(onCompleteCallback);
 
 		const windowChain = IframeUtils.getSameOriginWindowChain();
 		const mouseMove = platform.isIOS && BrowserFeatures.pointerEvents ? 'pointermove' : 'mousemove';
@@ -111,7 +124,7 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 				},
 				(lastEvent: R | null, currentEvent) => this._mouseMoveEventMerger!(lastEvent, currentEvent as MouseEvent)
 			));
-			this._hooks.add(dom.addDisposableListener(element, mouseUp, (e: MouseEvent) => this.stopMonitoring(true)));
+			this._hooks.add(dom.addDisposableListener(element, mouseUp, (e: MouseEvent) => this.stopMonitoring(true, true)));
 		}
 
 		if (IframeUtils.hasDifferentOriginAncestor()) {
@@ -121,19 +134,19 @@ export class GlobalMouseMoveMonitor<R extends { buttons: number; }> implements I
 			this._hooks.add(dom.addDisposableListener(lastSameOriginAncestor.window.document, 'mouseout', (browserEvent: MouseEvent) => {
 				let e = new StandardMouseEvent(browserEvent);
 				if (e.target.tagName.toLowerCase() === 'html') {
-					this.stopMonitoring(true);
+					this.stopMonitoring(true, true);
 				}
 			}));
 			// This one is for FF
 			this._hooks.add(dom.addDisposableListener(lastSameOriginAncestor.window.document, 'mouseover', (browserEvent: MouseEvent) => {
 				let e = new StandardMouseEvent(browserEvent);
 				if (e.target.tagName.toLowerCase() === 'html') {
-					this.stopMonitoring(true);
+					this.stopMonitoring(true, true);
 				}
 			}));
 			// This one is for IE
 			this._hooks.add(dom.addDisposableListener(lastSameOriginAncestor.window.document.body, 'mouseleave', (browserEvent: MouseEvent) => {
-				this.stopMonitoring(true);
+				this.stopMonitoring(true, true);
 			}));
 		}
 	}

@@ -232,7 +232,7 @@ export class MouseHandler extends ViewEventHandler {
 			if (shouldHandle) {
 				focus();
 				this._mouseDownOperation.start(t.type, e);
-			} else if (this.keybindingService.startSelection(e)) {
+			} else if (this.keybindingService.startSelection(e, e.target)) {
 				focus();
 				this._mouseDownOperation.startSelection(t.type, e,
 					() => this.keybindingService.cancelSelection(), () => this.keybindingService.endSelection());

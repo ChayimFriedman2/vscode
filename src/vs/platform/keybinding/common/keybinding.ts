@@ -73,7 +73,7 @@ export interface IKeybindingService {
 	 * @param mouseEvent The mouse down event started the selection.
 	 * @returns true if found a shortcut that matches the event.
 	 */
-	startSelection(mouseEvent: IMouseEvent): boolean;
+	startSelection(mouseEvent: IMouseEvent, target: IContextKeyServiceTarget): boolean;
 	/**
 	 * Ends the current selection and executes the bound command.
 	 * Should be called while the text is selected in the editor.

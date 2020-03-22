@@ -253,11 +253,6 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 			}
 		}));
 
-		this._register(dom.addDisposableListener(window, dom.EventType.MOUSE_DOWN, (e: MouseEvent) => {
-			const mouseEvent = new StandardMouseEvent(e);
-			this._startSelection(mouseEvent, mouseEvent.target);
-		}));
-
 		this._register(dom.addDisposableListener(window, dom.EventType.MOUSE_UP, (e: MouseEvent) => {
 			let mouseEvent = new StandardMouseEvent(e);
 			let shouldPreventDefault = this._dispatchMouse(mouseEvent, mouseEvent.target);

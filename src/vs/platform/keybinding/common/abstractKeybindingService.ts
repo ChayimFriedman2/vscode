@@ -17,7 +17,7 @@ import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKe
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from 'vs/base/common/actions';
-import { SelectionBinding, MouseButton, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
+import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
 
 interface CurrentChord {
 	keypress: string;
@@ -37,10 +37,10 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 	private _currentChordStatusMessage: IDisposable | null;
 
 	/**
-	 * If the user dragging the mouse in selection shortcut, this is the dragged mouse button.
-	 * If not, this is -1.
+	 * Usually this is null. When started a selection shortcut it becomes the command to execute,
+	 * and when finished we reset it again.
 	 */
-	private _selectingMouseButton: MouseButton = -1;
+	private _selectionCommand: IResolveResult | null = null;
 
 	public get inChordMode(): boolean {
 		return !!this._currentChord;
@@ -172,22 +172,23 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		return this._doDispatch(this.resolveMouseEvent(e), target);
 	}
 
-	private inSelectionMode(): boolean {
-		return this._selectingMouseButton !== -1;
+	public startSelection(mouseEvent: IMouseEvent, target: IContextKeyServiceTarget): boolean {
+		const resolvedBinding = this.resolveSelectionEvent(mouseEvent);
+		this._selectionCommand = this._getCommand(resolvedBinding, target);
+		if (!this._selectionCommand || !this._selectionCommand.commandId) {
+			this._selectionCommand = null;
+		}
+		return this._selectionCommand !== null;
 	}
 
-	protected _startSelection(e: IMouseEvent, target: IContextKeyServiceTarget): void {
-		if (this.inSelectionMode() || this.inChordMode) {
-			// To keep consistency with the keys behavior, we want to not consider another shortcut if we're in chord mode
-			return;
-		}
+	public endSelection(): Thenable<void> {
+		const command = this._selectionCommand!;
+		this._selectionCommand = null;
+		return this._executeCommand(command);
+	}
 
-		const keybinding = this.resolveSelectionEvent(e);
-		const resolveResult = this._getCommand(keybinding, target);
-		if (resolveResult) {
-			// Don't need to check resolveResult.enterChord because selections cannot be chords
-			this._selectingMouseButton = MouseButtonUtils.fromKeyCode(e.keyCode);
-		}
+	public cancelSelection(): void {
+		this._selectionCommand = null;
 	}
 
 	private _getCommand(keybinding: ResolvedKeybinding, target: IContextKeyServiceTarget): IResolveResult | null {
@@ -231,15 +232,21 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 			if (!resolveResult.bubble) {
 				shouldPreventDefault = true;
 			}
-			if (typeof resolveResult.commandArgs === 'undefined') {
-				this._commandService.executeCommand(resolveResult.commandId).then(undefined, err => this._notificationService.warn(err));
-			} else {
-				this._commandService.executeCommand(resolveResult.commandId, resolveResult.commandArgs).then(undefined, err => this._notificationService.warn(err));
-			}
-			this._telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: resolveResult.commandId, from: 'keybinding' });
+			this._executeCommand(resolveResult);
 		}
 
 		return shouldPreventDefault;
+	}
+
+	private _executeCommand(resolveResult: IResolveResult): Promise<void> {
+		const commandId = resolveResult.commandId!;
+		this._telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: commandId, from: 'keybinding' });
+		if (typeof resolveResult.commandArgs === 'undefined') {
+			return this._commandService.executeCommand(commandId).then(undefined, err => this._notificationService.warn(err));
+		}
+		else {
+			return this._commandService.executeCommand(commandId, resolveResult.commandArgs).then(undefined, err => this._notificationService.warn(err));
+		}
 	}
 
 	mightProducePrintableCharacter(event: IKeyboardEvent): boolean {

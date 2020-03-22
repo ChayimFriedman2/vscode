@@ -118,6 +118,16 @@ export class MockKeybindingService implements IKeybindingService {
 		return this.resolveKeybinding(keybinding.toChord())[0];
 	}
 
+	public startSelection(mouseEvent: IMouseEvent, target: IContextKeyServiceTarget): boolean {
+		return false;
+	}
+	public endSelection(): Thenable<void> {
+		throw new Error('Method not implemented.');
+	}
+	public cancelSelection(): void {
+		throw new Error('Method not implemented.');
+	}
+
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {
 		return [];
 	}

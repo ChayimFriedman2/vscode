@@ -6,7 +6,7 @@
 import * as strings from 'vs/base/common/strings';
 import { ILocalization } from 'vs/platform/localizations/common/localizations';
 import { URI } from 'vs/base/common/uri';
-import { JSONKey } from 'vs/platform/keybinding/common/keybinding';
+import { JSONKey } from 'vs/base/common/keyCodes';
 
 export const MANIFEST_CACHE_FOLDER = 'CachedExtensions';
 export const USER_MANIFEST_CACHE_FILE = 'user';

@@ -5,7 +5,7 @@
 
 import { OperatingSystem } from 'vs/base/common/platform';
 import { illegalArgument } from 'vs/base/common/errors';
-import { MouseBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, UserSettingsMouseButtons } from 'vs/base/common/mouseButtons';
 
 /**
  * Virtual Key Codes, the value does not hold any inherent meaning.
@@ -477,6 +477,22 @@ export function createSimpleKeybinding(keybinding: number, OS: OperatingSystem):
 	return new SimpleKeybinding(ctrlKey, shiftKey, altKey, metaKey, keyCode);
 }
 
+/**
+ * A key represented in suitable format for JSON.
+ */
+export type JSONKey = string | IMouseJSONKey | ISelectionJSONKey;
+
+interface IMouseJSONKey {
+	type: 'mouse';
+	button: UserSettingsMouseButtons;
+	times?: number;
+}
+
+interface ISelectionJSONKey {
+	type: 'selection';
+	button: UserSettingsMouseButtons;
+}
+
 export class SimpleKeybinding {
 	public readonly ctrlKey: boolean;
 	public readonly shiftKey: boolean;
@@ -610,7 +626,7 @@ export abstract class ResolvedKeybinding {
 	/**
 	 * This prints the binding in a format suitable for user settings.
 	 */
-	public abstract getUserSettingsLabel(): string | null;
+	public abstract getUserSettingsLabel(): JSONKey | null;
 	/**
 	 * Is the user settings label reflecting the label?
 	 */

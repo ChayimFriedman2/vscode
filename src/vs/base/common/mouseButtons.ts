@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResolvedKeybinding, ResolvedKeybindingPart } from 'vs/base/common/keyCodes';
-import { OperatingSystem, OS } from 'vs/base/common/platform';
+import { ResolvedKeybinding, ResolvedKeybindingPart, JSONKey } from 'vs/base/common/keyCodes';
+import { OS } from 'vs/base/common/platform';
 import { UILabelProvider, AriaLabelProvider, UserSettingsLabelProvider } from 'vs/base/common/keybindingLabels';
 
 export const enum MouseButton {
@@ -18,7 +18,7 @@ const uiButtonToStr = ['LMB', 'MMB', 'RMB'];
 const ariaStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
 const ariaButtonToStr = ['LMB', 'MMB', 'RMB'];
 const userSettingsStrToButton = { 'left': MouseButton.Left, 'middle': MouseButton.Middle, 'right': MouseButton.Right };
-const userSettingsButtonToStr = ['left', 'middle', 'right'];
+const userSettingsButtonToStr: UserSettingsMouseButtons[] = ['left', 'middle', 'right'];
 
 export type UserSettingsMouseButtons = keyof typeof userSettingsStrToButton;
 
@@ -37,7 +37,7 @@ export namespace MouseButtonUtils {
 		return ariaStrToButton[button.toLowerCase()];
 	}
 
-	export function toUserSettingsString(button: MouseButton): string {
+	export function toUserSettingsString(button: MouseButton): UserSettingsMouseButtons {
 		return userSettingsButtonToStr[button];
 	}
 	export function fromUserSettingsString(button: string): MouseButton {
@@ -91,6 +91,8 @@ abstract class BaseMouseBinding {
 	abstract getAriaLabel(): string | null;
 
 	abstract get dispatchPrefix(): string;
+
+	abstract asJSONKey(): JSONKey;
 }
 
 export class MouseBinding extends BaseMouseBinding {
@@ -124,6 +126,14 @@ export class MouseBinding extends BaseMouseBinding {
 	get dispatchPrefix(): string {
 		return 'mouse';
 	}
+
+	asJSONKey(): JSONKey {
+		return {
+			type: 'mouse',
+			button: MouseButtonUtils.toUserSettingsString(this.button),
+			times: this.times
+		};
+	}
 }
 
 export class SelectionBinding extends BaseMouseBinding {
@@ -149,6 +159,13 @@ export class SelectionBinding extends BaseMouseBinding {
 	get dispatchPrefix(): string {
 		return 'selection';
 	}
+
+	asJSONKey(): JSONKey {
+		return {
+			type: 'selection',
+			button: MouseButtonUtils.toUserSettingsString(this.button)
+		};
+	}
 }
 
 export class ResolvedMouseBinding extends ResolvedKeybinding {
@@ -173,8 +190,8 @@ export class ResolvedMouseBinding extends ResolvedKeybinding {
 		return null;
 	}
 
-	public getUserSettingsLabel(): string | null {
-		return this.userSettingsPrefix + UserSettingsLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toUserSettingsString(binding.button));
+	public getUserSettingsLabel(): JSONKey {
+		return this._binding.asJSONKey();
 	}
 
 	public isWYSIWYG(): boolean {

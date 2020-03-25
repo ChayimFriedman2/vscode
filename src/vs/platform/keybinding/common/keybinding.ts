@@ -5,28 +5,12 @@
 
 import { Event } from 'vs/base/common/event';
 import { IJSONSchema } from 'vs/base/common/jsonSchema';
-import { Keybinding, KeyCode, ResolvedKeybinding } from 'vs/base/common/keyCodes';
+import { Keybinding, KeyCode, ResolvedKeybinding, JSONKey } from 'vs/base/common/keyCodes';
 import { IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextkey';
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { MouseBinding, MouseButton, UserSettingsMouseButtons } from 'vs/base/common/mouseButtons';
-
-/**
- * A key represented in suitable format for JSON.
- */
-export type JSONKey = string | IMouseJSONKey | ISelectionJSONKey;
-
-interface IMouseJSONKey {
-	type: 'mouse';
-	button: UserSettingsMouseButtons;
-	times?: number;
-}
-
-interface ISelectionJSONKey {
-	type: 'selection';
-	button: UserSettingsMouseButtons;
-}
 
 export interface IUserFriendlyKeybinding {
 	key: JSONKey;

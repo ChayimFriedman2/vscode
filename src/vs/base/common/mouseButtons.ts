@@ -29,8 +29,10 @@ const uiStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left,
 const uiButtonToStr = ['LMB', 'MMB', 'RMB'];
 const ariaStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
 const ariaButtonToStr = ['LMB', 'MMB', 'RMB'];
-const userSettingsStrToButton: { [key: string]: MouseButton } = { 'lmb': MouseButton.Left, 'mmb': MouseButton.Middle, 'rmb': MouseButton.Right };
-const userSettingsButtonToStr = ['lmb', 'mmb', 'rmb'];
+const userSettingsStrToButton = { 'left': MouseButton.Left, 'middle': MouseButton.Middle, 'right': MouseButton.Right };
+const userSettingsButtonToStr = ['left', 'middle', 'right'];
+
+export type UserSettingsMouseButtons = keyof typeof userSettingsStrToButton;
 
 export namespace MouseButtonUtils {
 	export function toString(button: MouseButton): string {
@@ -51,7 +53,7 @@ export namespace MouseButtonUtils {
 		return userSettingsButtonToStr[button];
 	}
 	export function fromUserSettingsString(button: string): MouseButton {
-		return userSettingsStrToButton[button.toLowerCase()];
+		return userSettingsStrToButton[button.toLowerCase() as UserSettingsMouseButtons];
 	}
 }
 

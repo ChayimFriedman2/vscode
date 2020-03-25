@@ -10,10 +10,26 @@ import { IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextk
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { MouseBinding, MouseButton } from 'vs/base/common/mouseButtons';
+import { MouseBinding, MouseButton, UserSettingsMouseButtons } from 'vs/base/common/mouseButtons';
+
+/**
+ * A key represented in suitable format for JSON.
+ */
+export type JSONKey = string | IMouseJSONKey | ISelectionJSONKey;
+
+interface IMouseJSONKey {
+	type: 'mouse';
+	button: UserSettingsMouseButtons;
+	times?: number;
+}
+
+interface ISelectionJSONKey {
+	type: 'selection';
+	button: UserSettingsMouseButtons;
+}
 
 export interface IUserFriendlyKeybinding {
-	key: string;
+	key: JSONKey;
 	command: string;
 	args?: any;
 	when?: string;

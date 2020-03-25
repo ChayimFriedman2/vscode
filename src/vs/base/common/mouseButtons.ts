@@ -210,7 +210,7 @@ export class ResolvedMouseBinding extends ResolvedKeybinding {
 			this._binding.metaKey,
 			MouseButtonUtils.toString(this._binding.button),
 			MouseButtonUtils.toAriaString(this._binding.button),
-			this._binding instanceof SelectionBinding
+			'SEL'
 		)];
 	}
 

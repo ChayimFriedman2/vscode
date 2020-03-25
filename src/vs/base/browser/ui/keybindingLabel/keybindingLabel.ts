@@ -10,7 +10,6 @@ import { ResolvedKeybinding, ResolvedKeybindingPart } from 'vs/base/common/keyCo
 import { UILabelProvider } from 'vs/base/common/keybindingLabels';
 import * as dom from 'vs/base/browser/dom';
 import { localize } from 'vs/nls';
-import { UiSelectionPrefix } from 'vs/base/common/mouseButtons';
 
 const $ = dom.$;
 
@@ -80,8 +79,8 @@ export class KeybindingLabel {
 
 	private renderPart(parent: HTMLElement, part: ResolvedKeybindingPart, match: PartMatches | null) {
 		const modifierLabels = UILabelProvider.modifierLabels[this.os];
-		if (part.isSelection) {
-			this.renderKey(parent, UiSelectionPrefix, false);
+		if (part.prefix) {
+			this.renderKey(parent, part.prefix, false);
 		}
 		if (part.ctrlKey) {
 			this.renderKey(parent, modifierLabels.ctrlKey, Boolean(match?.ctrlKey), modifierLabels.separator);

@@ -595,14 +595,17 @@ export class ResolvedKeybindingPart {
 	readonly keyLabel: string | null;
 	readonly keyAriaLabel: string | null;
 
+	readonly prefix?: string;
+
 	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean,
-		kbLabel: string | null, kbAriaLabel: string | null, public readonly isSelection = false) {
+		kbLabel: string | null, kbAriaLabel: string | null, prefix?: string) {
 		this.ctrlKey = ctrlKey;
 		this.shiftKey = shiftKey;
 		this.altKey = altKey;
 		this.metaKey = metaKey;
 		this.keyLabel = kbLabel;
 		this.keyAriaLabel = kbAriaLabel;
+		this.prefix = prefix;
 	}
 }
 

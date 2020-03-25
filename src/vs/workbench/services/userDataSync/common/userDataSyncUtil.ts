@@ -11,6 +11,7 @@ import { FormattingOptions } from 'vs/base/common/jsonFormatter';
 import { URI } from 'vs/base/common/uri';
 import { ITextModelService } from 'vs/editor/common/services/resolverService';
 import { ITextResourcePropertiesService, ITextResourceConfigurationService } from 'vs/editor/common/services/textResourceConfigurationService';
+import { JSONKey, JSONKeysUtils } from 'vs/base/common/keyCodes';
 
 class UserDataSyncUtilService implements IUserDataSyncUtilService {
 
@@ -27,10 +28,10 @@ class UserDataSyncUtilService implements IUserDataSyncUtilService {
 		return getDefaultIgnoredSettings();
 	}
 
-	async resolveUserBindings(userBindings: string[]): Promise<IStringDictionary<string>> {
+	async resolveUserBindings(userBindings: JSONKey[]): Promise<IStringDictionary<string>> {
 		const keys: IStringDictionary<string> = {};
 		for (const userbinding of userBindings) {
-			keys[userbinding] = this.keybindingsService.resolveUserBinding(userbinding).map(part => part.getUserSettingsLabel()).join(' ');
+			keys[JSONKeysUtils.toString(userbinding)] = this.keybindingsService.resolveUserBinding(userbinding).map(part => JSONKeysUtils.toString(part.getUserSettingsLabel() || '')).join(' ');
 		}
 		return keys;
 	}

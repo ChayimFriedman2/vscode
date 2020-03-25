@@ -97,7 +97,7 @@ export interface IKeybindingService {
 
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 
-	resolveUserBinding(userBinding: string): ResolvedKeybinding[];
+	resolveUserBinding(userBinding: JSONKey): ResolvedKeybinding[];
 
 	/**
 	 * Resolve and dispatch `keyboardEvent` and invoke the command.

@@ -9,6 +9,7 @@ import { IUserDataSyncService, IUserDataSyncUtilService, IUserDataAutoSyncServic
 import { URI } from 'vs/base/common/uri';
 import { IStringDictionary } from 'vs/base/common/collections';
 import { FormattingOptions } from 'vs/base/common/jsonFormatter';
+import { JSONKey } from 'vs/base/common/keyCodes';
 
 export class UserDataSyncChannel implements IServerChannel {
 
@@ -89,7 +90,7 @@ export class UserDataSyncUtilServiceClient implements IUserDataSyncUtilService {
 		return this.channel.call('resolveDefaultIgnoredSettings');
 	}
 
-	async resolveUserBindings(userbindings: string[]): Promise<IStringDictionary<string>> {
+	async resolveUserBindings(userbindings: JSONKey[]): Promise<IStringDictionary<string>> {
 		return this.channel.call('resolveUserKeybindings', [userbindings]);
 	}
 

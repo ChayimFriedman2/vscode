@@ -13,6 +13,7 @@ import * as contentUtil from 'vs/platform/userDataSync/common/content';
 import { IStringDictionary } from 'vs/base/common/collections';
 import { FormattingOptions } from 'vs/base/common/jsonFormatter';
 import { IUserDataSyncUtilService } from 'vs/platform/userDataSync/common/userDataSync';
+import { JSONKeysUtils } from 'vs/base/common/keyCodes';
 
 interface ICompareResult {
 	added: Set<string>;
@@ -34,7 +35,7 @@ export async function merge(localContent: string, remoteContent: string, baseCon
 	const remote = <IUserFriendlyKeybinding[]>parse(remoteContent);
 	const base = baseContent ? <IUserFriendlyKeybinding[]>parse(baseContent) : null;
 
-	const userbindings: string[] = [...local, ...remote, ...(base || [])].map(keybinding => keybinding.key);
+	const userbindings = [...local, ...remote, ...(base || [])].map(keybinding => keybinding.key);
 	const normalizedKeys = await userDataSyncUtilService.resolveUserBindings(userbindings);
 	let keybindingsMergeResult = computeMergeResultByKeybinding(local, remote, base, normalizedKeys);
 
@@ -78,7 +79,7 @@ export async function merge(localContent: string, remoteContent: string, baseCon
 		}
 		const keybindings = remoteByCommand.get(command)!;
 		// Ignore negated commands
-		if (keybindings.some(keybinding => keybinding.command !== `-${command}` && keybindingsMergeResult.conflicts.has(normalizedKeys[keybinding.key]))) {
+		if (keybindings.some(keybinding => keybinding.command !== `-${command}` && keybindingsMergeResult.conflicts.has(normalizedKeys[JSONKeysUtils.toString(keybinding.key)]))) {
 			commandsMergeResult.conflicts.add(command);
 			continue;
 		}
@@ -92,7 +93,7 @@ export async function merge(localContent: string, remoteContent: string, baseCon
 		}
 		const keybindings = remoteByCommand.get(command)!;
 		// Ignore negated commands
-		if (keybindings.some(keybinding => keybinding.command !== `-${command}` && keybindingsMergeResult.conflicts.has(normalizedKeys[keybinding.key]))) {
+		if (keybindings.some(keybinding => keybinding.command !== `-${command}` && keybindingsMergeResult.conflicts.has(normalizedKeys[JSONKeysUtils.toString(keybinding.key)]))) {
 			commandsMergeResult.conflicts.add(command);
 			continue;
 		}
@@ -222,7 +223,7 @@ function computeMergeResultByKeybinding(local: IUserFriendlyKeybinding[], remote
 function byKeybinding(keybindings: IUserFriendlyKeybinding[], keys: IStringDictionary<string>) {
 	const map: Map<string, IUserFriendlyKeybinding[]> = new Map<string, IUserFriendlyKeybinding[]>();
 	for (const keybinding of keybindings) {
-		const key = keys[keybinding.key];
+		const key = keys[JSONKeysUtils.toString(keybinding.key)];
 		let value = map.get(key);
 		if (!value) {
 			value = [];
@@ -281,8 +282,8 @@ function compareByCommand(from: Map<string, IUserFriendlyKeybinding[]>, to: Map<
 		if (removed.has(key)) {
 			continue;
 		}
-		const value1: IUserFriendlyKeybinding[] = from.get(key)!.map(keybinding => ({ ...keybinding, ...{ key: normalizedKeys[keybinding.key] } }));
-		const value2: IUserFriendlyKeybinding[] = to.get(key)!.map(keybinding => ({ ...keybinding, ...{ key: normalizedKeys[keybinding.key] } }));
+		const value1: IUserFriendlyKeybinding[] = from.get(key)!.map(keybinding => ({ ...keybinding, ...{ key: normalizedKeys[JSONKeysUtils.toString(keybinding.key)] } }));
+		const value2: IUserFriendlyKeybinding[] = to.get(key)!.map(keybinding => ({ ...keybinding, ...{ key: normalizedKeys[JSONKeysUtils.toString(keybinding.key)] } }));
 		if (!areSameKeybindingsWithSameCommand(value1, value2)) {
 			updated.add(key);
 		}
@@ -307,7 +308,7 @@ function isSameKeybinding(a: IUserFriendlyKeybinding, b: IUserFriendlyKeybinding
 	if (a.command !== b.command) {
 		return false;
 	}
-	if (a.key !== b.key) {
+	if (!JSONKeysUtils.equals(a.key, b.key)) {
 		return false;
 	}
 	const whenA = ContextKeyExpr.deserialize(a.when);

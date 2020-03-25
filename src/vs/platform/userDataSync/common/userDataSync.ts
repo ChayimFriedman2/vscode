@@ -22,6 +22,7 @@ import { isEqual, joinPath, dirname, basename } from 'vs/base/common/resources';
 import { IEnvironmentService } from 'vs/platform/environment/common/environment';
 import { IProductService } from 'vs/platform/product/common/productService';
 import { distinct } from 'vs/base/common/arrays';
+import { JSONKey } from 'vs/base/common/keyCodes';
 
 export const CONFIGURATION_SYNC_STORE_KEY = 'configurationSync.store';
 
@@ -319,7 +320,7 @@ export interface IUserDataAutoSyncService {
 export const IUserDataSyncUtilService = createDecorator<IUserDataSyncUtilService>('IUserDataSyncUtilService');
 export interface IUserDataSyncUtilService {
 	_serviceBrand: undefined;
-	resolveUserBindings(userbindings: string[]): Promise<IStringDictionary<string>>;
+	resolveUserBindings(userbindings: JSONKey[]): Promise<IStringDictionary<string>>;
 	resolveFormattingOptions(resource: URI): Promise<FormattingOptions>;
 	resolveDefaultIgnoredSettings(): Promise<string[]>;
 }

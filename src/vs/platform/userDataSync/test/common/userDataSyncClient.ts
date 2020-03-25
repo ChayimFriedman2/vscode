@@ -36,6 +36,7 @@ import { IAuthenticationTokenService } from 'vs/platform/authentication/common/a
 import product from 'vs/platform/product/common/product';
 import { IProductService } from 'vs/platform/product/common/productService';
 import { UserDataSyncBackupStoreService } from 'vs/platform/userDataSync/common/userDataSyncBackupStoreService';
+import { JSONKey, JSONKeysUtils } from 'vs/base/common/keyCodes';
 
 export class UserDataSyncClient extends Disposable {
 
@@ -247,10 +248,10 @@ export class TestUserDataSyncUtilService implements IUserDataSyncUtilService {
 		return getDefaultIgnoredSettings();
 	}
 
-	async resolveUserBindings(userbindings: string[]): Promise<IStringDictionary<string>> {
+	async resolveUserBindings(userbindings: JSONKey[]): Promise<IStringDictionary<string>> {
 		const keys: IStringDictionary<string> = {};
 		for (const keybinding of userbindings) {
-			keys[keybinding] = keybinding;
+			keys[JSONKeysUtils.toString(keybinding)] = JSONKeysUtils.toString(keybinding);
 		}
 		return keys;
 	}

@@ -33,7 +33,7 @@ import { IListVirtualDelegate, IListRenderer, IListContextMenuEvent, IListEvent 
 import { IThemeService, registerThemingParticipant, IColorTheme, ICssStyleCollector } from 'vs/platform/theme/common/themeService';
 import { IContextKeyService, IContextKey, ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
 import { StandardKeyboardEvent, IKeyboardEvent } from 'vs/base/browser/keyboardEvent';
-import { KeyCode, ResolvedKeybinding, JSONKey, JSONKeysEquals } from 'vs/base/common/keyCodes';
+import { KeyCode, ResolvedKeybinding, JSONKey, JSONKeysUtils } from 'vs/base/common/keyCodes';
 import { listHighlightForeground, badgeBackground, contrastBorder, badgeForeground, listActiveSelectionForeground, listInactiveSelectionForeground, listHoverForeground, listFocusForeground, editorBackground } from 'vs/platform/theme/common/colorRegistry';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 import { EditorExtensionsRegistry } from 'vs/editor/browser/editorExtensions';
@@ -262,7 +262,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 
 	updateKeybinding(keybindingEntry: IKeybindingItemEntry, key: JSONKey, when: string | undefined): Promise<any> {
 		const currentKey = keybindingEntry.keybindingItem.keybinding ? keybindingEntry.keybindingItem.keybinding.getUserSettingsLabel() : '';
-		if ((currentKey && !JSONKeysEquals(currentKey, key)) || keybindingEntry.keybindingItem.when !== when) {
+		if ((currentKey && !JSONKeysUtils.equals(currentKey, key)) || keybindingEntry.keybindingItem.when !== when) {
 			return this.keybindingEditingService.editKeybinding(keybindingEntry.keybindingItem.keybindingItem, key, when || undefined)
 				.then(() => {
 					if (!keybindingEntry.keybindingItem.keybinding) { // reveal only if keybinding was added to unassinged. Because the entry will be placed in different position after rendering

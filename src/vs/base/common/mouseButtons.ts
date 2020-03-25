@@ -5,7 +5,7 @@
 
 import { ResolvedKeybinding, ResolvedKeybindingPart, JSONKey } from 'vs/base/common/keyCodes';
 import { OS } from 'vs/base/common/platform';
-import { UILabelProvider, AriaLabelProvider, UserSettingsLabelProvider } from 'vs/base/common/keybindingLabels';
+import { UILabelProvider, AriaLabelProvider } from 'vs/base/common/keybindingLabels';
 
 export const enum MouseButton {
 	Left = 0,

@@ -100,9 +100,9 @@ export class MouseBinding extends BaseMouseBinding {
 	/**
 	 * One is single click, two is double click, etc..
 	 */
-	public readonly times: number;
+	public readonly times?: number;
 
-	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton, times: number) {
+	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton, times?: number) {
 		super(ctrlKey, shiftKey, altKey, metaKey, button);
 		this.times = times;
 	}

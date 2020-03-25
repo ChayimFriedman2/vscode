@@ -482,13 +482,13 @@ export function createSimpleKeybinding(keybinding: number, OS: OperatingSystem):
  */
 export type JSONKey = string | IMouseJSONKey | ISelectionJSONKey;
 
-interface IMouseJSONKey {
+export interface IMouseJSONKey {
 	type: 'mouse';
 	button: UserSettingsMouseButtons;
 	times?: number;
 }
 
-interface ISelectionJSONKey {
+export interface ISelectionJSONKey {
 	type: 'selection';
 	button: UserSettingsMouseButtons;
 }

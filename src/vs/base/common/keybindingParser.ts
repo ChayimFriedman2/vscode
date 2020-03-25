@@ -3,15 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChordKeybinding, KeyCodeUtils, Keybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
+import { ChordKeybinding, KeyCodeUtils, Keybinding, SimpleKeybinding, JSONKey, IMouseJSONKey, ISelectionJSONKey } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
-import { UserSettingsSelectionPrefix, MouseBinding, MouseButtonUtils, UserSettingsMousePrefix } from 'vs/base/common/mouseButtons';
+import { MouseBinding, MouseButtonUtils, SelectionBinding } from 'vs/base/common/mouseButtons';
+import { isString } from 'vs/base/common/types';
 
 export class KeybindingParser {
 
 	private static _readModifiers(input: string) {
-		input = input.trimLeft(); // At right we already trimmed the whole input at the beginning - only the left changes
+		input = input.toLowerCase().trim();
 
 		let ctrl = false;
 		let shift = false;
@@ -75,18 +76,16 @@ export class KeybindingParser {
 		};
 	}
 
-	private static parseSelectionBinding(input: string): MouseBinding {
-		input = input.substr(UserSettingsSelectionPrefix.length).trimRight();
-		const mods = this._readModifiers(input);
+	private static parseSelectionBinding(input: ISelectionJSONKey): SelectionBinding {
+		const mods = this._readModifiers(input.button);
 		const mouseButton = MouseButtonUtils.fromUserSettingsString(mods.key);
-		return new MouseBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton, true);
+		return new SelectionBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton);
 	}
 
-	private static parseMouseBinding(input: string): MouseBinding {
-		input = input.substr(UserSettingsSelectionPrefix.length).trimRight();
-		const mods = this._readModifiers(input);
+	private static parseMouseBinding(input: IMouseJSONKey): MouseBinding {
+		const mods = this._readModifiers(input.button);
 		const mouseButton = MouseButtonUtils.fromUserSettingsString(mods.key);
-		return new MouseBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton, false);
+		return new MouseBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton, input.times);
 	}
 
 	private static parseSimpleKeybinding(input: string): [SimpleKeybinding, string] {
@@ -95,28 +94,26 @@ export class KeybindingParser {
 		return [new SimpleKeybinding(mods.ctrl, mods.shift, mods.alt, mods.meta, keyCode), mods.remains];
 	}
 
-	public static parseKeybinding(input: string, OS: OperatingSystem): Keybinding | MouseBinding | null {
-		if (!input) {
-			return null;
-		}
+	public static parseKeybinding(input: JSONKey, OS: OperatingSystem): Keybinding | MouseBinding | SelectionBinding | null {
 
-		input = input.toLowerCase().trim();
+		if (isString(input)) {
+			if (!input) {
+				return null;
+			}
 
-		if (input.startsWith(UserSettingsSelectionPrefix)) {
+			const parts: SimpleKeybinding[] = [];
+			let part: SimpleKeybinding;
+
+			do {
+				[part, input] = this.parseSimpleKeybinding(input);
+				parts.push(part);
+			} while (input.length > 0);
+			return new ChordKeybinding(parts);
+		} else if (input.type === 'mouse') {
+			return this.parseMouseBinding(input);
+		} else {
 			return this.parseSelectionBinding(input);
 		}
-		if (input.startsWith(UserSettingsMousePrefix)) {
-			return this.parseMouseBinding(input);
-		}
-
-		const parts: SimpleKeybinding[] = [];
-		let part: SimpleKeybinding;
-
-		do {
-			[part, input] = this.parseSimpleKeybinding(input);
-			parts.push(part);
-		} while (input.length > 0);
-		return new ChordKeybinding(parts);
 	}
 
 	private static parseSimpleUserBinding(input: string): [SimpleKeybinding | ScanCodeBinding, string] {
@@ -131,27 +128,24 @@ export class KeybindingParser {
 		return [new SimpleKeybinding(mods.ctrl, mods.shift, mods.alt, mods.meta, keyCode), mods.remains];
 	}
 
-	static parseUserBinding(input: string): (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding {
-		if (!input) {
-			return [];
-		}
+	static parseUserBinding(input: JSONKey): (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding | SelectionBinding {
+		if (isString(input)) {
+			if (!input) {
+				return [];
+			}
 
-		input = input.toLowerCase().trim();
+			const parts: (SimpleKeybinding | ScanCodeBinding)[] = [];
+			let part: SimpleKeybinding | ScanCodeBinding;
 
-		if (input.startsWith(UserSettingsSelectionPrefix)) {
+			while (input.length > 0) {
+				[part, input] = this.parseSimpleUserBinding(input);
+				parts.push(part);
+			}
+			return parts;
+		} else if (input.type === 'mouse') {
+			return this.parseMouseBinding(input);
+		} else {
 			return this.parseSelectionBinding(input);
 		}
-		if (input.startsWith(UserSettingsMousePrefix)) {
-			return this.parseMouseBinding(input);
-		}
-
-		const parts: (SimpleKeybinding | ScanCodeBinding)[] = [];
-		let part: SimpleKeybinding | ScanCodeBinding;
-
-		while (input.length > 0) {
-			[part, input] = this.parseSimpleUserBinding(input);
-			parts.push(part);
-		}
-		return parts;
 	}
 }

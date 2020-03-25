@@ -402,6 +402,9 @@ export namespace KeyCodeUtils {
  *  W = bit 8 = winCtrl flag
  *  K = bits 0-7 = key code/mouse button
  * ```
+ *
+ * For key bindings, the MSB (most significant bit) word is the chord, if there is not chord it's 0.
+ * For mouse bindings, the MSB is the click times (i.e. 1 is single click, 2 is double click, etc.).
  */
 const enum BinaryKeybindingsMask {
 	Type = 0x00003000,
@@ -446,6 +449,7 @@ export function createKeybinding(keybinding: number, OS: OperatingSystem): Keybi
 		}
 		return new ChordKeybinding([createSimpleKeybinding(firstPart, OS)]);
 	} else {
+		const times = (keybinding & 0xFFFF0000) >>> 16;
 		const ctrlCmd = (keybinding & BinaryKeybindingsMask.CtrlCmd ? true : false);
 		const winCtrl = (keybinding & BinaryKeybindingsMask.WinCtrl ? true : false);
 
@@ -455,7 +459,7 @@ export function createKeybinding(keybinding: number, OS: OperatingSystem): Keybi
 		const metaKey = (OS === OperatingSystem.Macintosh ? ctrlCmd : winCtrl);
 		const button = (keybinding & BinaryKeybindingsMask.KeyCode);
 
-		return new MouseBinding(ctrlKey, shiftKey, altKey, metaKey, button, type === KeybindingType.Selection);
+		return new MouseBinding(ctrlKey, shiftKey, altKey, metaKey, button, type === KeybindingType.Selection, times);
 	}
 }
 

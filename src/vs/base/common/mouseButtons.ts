@@ -17,10 +17,8 @@ const uiStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left,
 const uiButtonToStr = ['LMB', 'MMB', 'RMB'];
 const ariaStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
 const ariaButtonToStr = ['LMB', 'MMB', 'RMB'];
-const userSettingsStrToButton = { 'left': MouseButton.Left, 'middle': MouseButton.Middle, 'right': MouseButton.Right };
-const userSettingsButtonToStr: UserSettingsMouseButtons[] = ['left', 'middle', 'right'];
-
-export type UserSettingsMouseButtons = keyof typeof userSettingsStrToButton;
+const userSettingsStrToButton: { [key: string]: MouseButton } = { 'left': MouseButton.Left, 'middle': MouseButton.Middle, 'right': MouseButton.Right };
+const userSettingsButtonToStr = ['left', 'middle', 'right'];
 
 export namespace MouseButtonUtils {
 	export function toString(button: MouseButton): string {
@@ -37,11 +35,11 @@ export namespace MouseButtonUtils {
 		return ariaStrToButton[button.toLowerCase()];
 	}
 
-	export function toUserSettingsString(button: MouseButton): UserSettingsMouseButtons {
+	export function toUserSettingsString(button: MouseButton): string {
 		return userSettingsButtonToStr[button];
 	}
 	export function fromUserSettingsString(button: string): MouseButton {
-		return userSettingsStrToButton[button.toLowerCase() as UserSettingsMouseButtons];
+		return userSettingsStrToButton[button.toLowerCase()];
 	}
 }
 

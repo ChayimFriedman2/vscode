@@ -10,7 +10,7 @@ import { IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextk
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { MouseBinding, MouseButton, UserSettingsMouseButtons } from 'vs/base/common/mouseButtons';
+import { MouseBinding, MouseButton } from 'vs/base/common/mouseButtons';
 
 export interface IUserFriendlyKeybinding {
 	key: JSONKey;

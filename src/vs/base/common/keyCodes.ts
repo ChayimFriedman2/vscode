@@ -5,7 +5,8 @@
 
 import { OperatingSystem } from 'vs/base/common/platform';
 import { illegalArgument } from 'vs/base/common/errors';
-import { MouseBinding, UserSettingsMouseButtons } from 'vs/base/common/mouseButtons';
+import { MouseBinding, SelectionBinding } from 'vs/base/common/mouseButtons';
+import { isString } from 'vs/base/common/types';
 
 /**
  * Virtual Key Codes, the value does not hold any inherent meaning.
@@ -459,7 +460,10 @@ export function createKeybinding(keybinding: number, OS: OperatingSystem): Keybi
 		const metaKey = (OS === OperatingSystem.Macintosh ? ctrlCmd : winCtrl);
 		const button = (keybinding & BinaryKeybindingsMask.KeyCode);
 
-		return new MouseBinding(ctrlKey, shiftKey, altKey, metaKey, button, type === KeybindingType.Selection, times);
+		if (type === KeybindingType.Selection) {
+			new SelectionBinding(ctrlKey, shiftKey, altKey, metaKey, button);
+		}
+		return new MouseBinding(ctrlKey, shiftKey, altKey, metaKey, button, times);
 	}
 }
 
@@ -484,13 +488,20 @@ export type JSONKey = string | IMouseJSONKey | ISelectionJSONKey;
 
 export interface IMouseJSONKey {
 	type: 'mouse';
-	button: UserSettingsMouseButtons;
+	button: string;
 	times?: number;
 }
 
 export interface ISelectionJSONKey {
 	type: 'selection';
-	button: UserSettingsMouseButtons;
+	button: string;
+}
+
+export function JSONKeysEquals(a: JSONKey, b: JSONKey): boolean {
+	if (isString(a) || isString(b)) {
+		return a === b;
+	}
+	return a.type === b.type && a.button === b.button && (a as IMouseJSONKey).times === (b as IMouseJSONKey).times;
 }
 
 export class SimpleKeybinding {

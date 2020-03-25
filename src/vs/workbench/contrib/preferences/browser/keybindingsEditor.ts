@@ -33,7 +33,7 @@ import { IListVirtualDelegate, IListRenderer, IListContextMenuEvent, IListEvent 
 import { IThemeService, registerThemingParticipant, IColorTheme, ICssStyleCollector } from 'vs/platform/theme/common/themeService';
 import { IContextKeyService, IContextKey, ContextKeyExpr } from 'vs/platform/contextkey/common/contextkey';
 import { StandardKeyboardEvent, IKeyboardEvent } from 'vs/base/browser/keyboardEvent';
-import { KeyCode, ResolvedKeybinding } from 'vs/base/common/keyCodes';
+import { KeyCode, ResolvedKeybinding, JSONKey, JSONKeysEquals } from 'vs/base/common/keyCodes';
 import { listHighlightForeground, badgeBackground, contrastBorder, badgeForeground, listActiveSelectionForeground, listInactiveSelectionForeground, listHoverForeground, listFocusForeground, editorBackground } from 'vs/platform/theme/common/colorRegistry';
 import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 import { EditorExtensionsRegistry } from 'vs/editor/browser/editorExtensions';
@@ -46,7 +46,6 @@ import { IStorageService } from 'vs/platform/storage/common/storage';
 import { InputBox, MessageType } from 'vs/base/browser/ui/inputbox/inputBox';
 import { Emitter, Event } from 'vs/base/common/event';
 import { MenuRegistry, MenuId, isIMenuItem } from 'vs/platform/actions/common/actions';
-import { UserSettingsSelectionPrefix, UserSettingsMousePrefix } from 'vs/base/common/mouseButtons';
 
 const $ = DOM.$;
 
@@ -211,14 +210,13 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 	private defineMouseBinding(keybindingEntry: IKeybindingItemEntry): Promise<any> {
 		this.selectEntry(keybindingEntry);
 		this.showOverlayContainer();
-		return this.defineKeybindingWidget.define(true).then(key => {
-			if (key) {
-				if (key === 'lmb' || key === 'rmb') {
+		return this.defineKeybindingWidget.define(true).then(button => {
+			if (button) {
+				if (button === 'lmb' || button === 'rmb') {
 					return Promise.reject(new Error(localize('cannotBindLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
 				}
-				key = UserSettingsMousePrefix + key;
-				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_MOUSE, keybindingEntry.keybindingItem.command, key);
-				return this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when);
+				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_MOUSE, keybindingEntry.keybindingItem.command, button);
+				return this.updateKeybinding(keybindingEntry, { type: 'mouse', button }, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {
@@ -235,14 +233,13 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 	defineSelectionBinding(keybindingEntry: IKeybindingItemEntry): Promise<any> {
 		this.selectEntry(keybindingEntry);
 		this.showOverlayContainer();
-		return this.defineKeybindingWidget.define(true, true).then(key => {
-			if (key) {
-				if (key === 'lmb' || key === 'rmb' || key === 'mmb') {
+		return this.defineKeybindingWidget.define(true, true).then(button => {
+			if (button) {
+				if (button === 'lmb' || button === 'rmb' || button === 'mmb') {
 					return Promise.reject(new Error(localize('cannotBindLmbMmbRmbWithoutModifiers', "Can't use left, middle or right mouse buttons in a selection shortcut without modifiers.")));
 				}
-				key = UserSettingsSelectionPrefix + key;
-				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_SELECTION, keybindingEntry.keybindingItem.command, key);
-				return this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when);
+				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_SELECTION, keybindingEntry.keybindingItem.command, button);
+				return this.updateKeybinding(keybindingEntry, { type: 'selection', button }, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {
@@ -263,9 +260,9 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		}
 	}
 
-	updateKeybinding(keybindingEntry: IKeybindingItemEntry, key: string, when: string | undefined): Promise<any> {
+	updateKeybinding(keybindingEntry: IKeybindingItemEntry, key: JSONKey, when: string | undefined): Promise<any> {
 		const currentKey = keybindingEntry.keybindingItem.keybinding ? keybindingEntry.keybindingItem.keybinding.getUserSettingsLabel() : '';
-		if (currentKey !== key || keybindingEntry.keybindingItem.when !== when) {
+		if ((currentKey && !JSONKeysEquals(currentKey, key)) || keybindingEntry.keybindingItem.when !== when) {
 			return this.keybindingEditingService.editKeybinding(keybindingEntry.keybindingItem.keybindingItem, key, when || undefined)
 				.then(() => {
 					if (!keybindingEntry.keybindingItem.keybinding) { // reveal only if keybinding was added to unassinged. Because the entry will be placed in different position after rendering

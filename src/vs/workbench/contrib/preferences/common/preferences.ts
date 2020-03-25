@@ -10,6 +10,7 @@ import { IEditorPane } from 'vs/workbench/common/editor';
 import { IKeybindingItemEntry } from 'vs/workbench/services/preferences/common/keybindingsEditorModel';
 import { CancellationToken } from 'vs/base/common/cancellation';
 import { Event } from 'vs/base/common/event';
+import { JSONKey } from 'vs/base/common/keyCodes';
 
 export interface IWorkbenchSettingsConfiguration {
 	workbench: {
@@ -58,7 +59,7 @@ export interface IKeybindingsEditorPane extends IEditorPane {
 	selectKeybinding(keybindingEntry: IKeybindingItemEntry): void;
 	defineKeybinding(keybindingEntry: IKeybindingItemEntry): Promise<void>;
 	defineWhenExpression(keybindingEntry: IKeybindingItemEntry): void;
-	updateKeybinding(keybindingEntry: IKeybindingItemEntry, key: string, when: string | undefined): Promise<any>;
+	updateKeybinding(keybindingEntry: IKeybindingItemEntry, key: JSONKey, when: string | undefined): Promise<any>;
 	removeKeybinding(keybindingEntry: IKeybindingItemEntry): Promise<any>;
 	resetKeybinding(keybindingEntry: IKeybindingItemEntry): Promise<any>;
 	copyKeybinding(keybindingEntry: IKeybindingItemEntry): Promise<void>;

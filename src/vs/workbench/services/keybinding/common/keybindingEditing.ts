@@ -25,6 +25,7 @@ import { IUserFriendlyKeybinding } from 'vs/platform/keybinding/common/keybindin
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { ITextFileService } from 'vs/workbench/services/textfile/common/textfiles';
 import { registerSingleton } from 'vs/platform/instantiation/common/extensions';
+import { JSONKey } from 'vs/base/common/keyCodes';
 
 export const IKeybindingEditingService = createDecorator<IKeybindingEditingService>('keybindingEditingService');
 
@@ -32,7 +33,7 @@ export interface IKeybindingEditingService {
 
 	_serviceBrand: undefined;
 
-	editKeybinding(keybindingItem: ResolvedKeybindingItem, key: string, when: string | undefined): Promise<void>;
+	editKeybinding(keybindingItem: ResolvedKeybindingItem, key: JSONKey, when: string | undefined): Promise<void>;
 
 	removeKeybinding(keybindingItem: ResolvedKeybindingItem): Promise<void>;
 
@@ -57,7 +58,7 @@ export class KeybindingsEditingService extends Disposable implements IKeybinding
 		this.queue = new Queue<void>();
 	}
 
-	editKeybinding(keybindingItem: ResolvedKeybindingItem, key: string, when: string | undefined): Promise<void> {
+	editKeybinding(keybindingItem: ResolvedKeybindingItem, key: JSONKey, when: string | undefined): Promise<void> {
 		return this.queue.queue(() => this.doEditKeybinding(keybindingItem, key, when)); // queue up writes to prevent race conditions
 	}
 
@@ -69,7 +70,7 @@ export class KeybindingsEditingService extends Disposable implements IKeybinding
 		return this.queue.queue(() => this.doRemoveKeybinding(keybindingItem)); // queue up writes to prevent race conditions
 	}
 
-	private doEditKeybinding(keybindingItem: ResolvedKeybindingItem, key: string, when: string | undefined): Promise<void> {
+	private doEditKeybinding(keybindingItem: ResolvedKeybindingItem, key: JSONKey, when: string | undefined): Promise<void> {
 		return this.resolveAndValidate()
 			.then(reference => {
 				const model = reference.object.textEditorModel;
@@ -112,7 +113,7 @@ export class KeybindingsEditingService extends Disposable implements IKeybinding
 		return this.textFileService.save(this.resource);
 	}
 
-	private updateKeybinding(keybindingItem: ResolvedKeybindingItem, newKey: string, when: string | undefined, model: ITextModel, userKeybindingEntryIndex: number): void {
+	private updateKeybinding(keybindingItem: ResolvedKeybindingItem, newKey: JSONKey, when: string | undefined, model: ITextModel, userKeybindingEntryIndex: number): void {
 		const { tabSize, insertSpaces } = model.getOptions();
 		const eol = model.getEOL();
 		if (userKeybindingEntryIndex !== -1) {
@@ -185,7 +186,7 @@ export class KeybindingsEditingService extends Disposable implements IKeybinding
 		return indices;
 	}
 
-	private asObject(key: string, command: string | null, when: string | undefined, negate: boolean): any {
+	private asObject(key: JSONKey, command: string | null, when: string | undefined, negate: boolean): any {
 		const object: any = { key };
 		if (command) {
 			object['command'] = negate ? `-${command}` : command;

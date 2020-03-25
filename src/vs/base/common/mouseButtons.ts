@@ -89,6 +89,8 @@ abstract class BaseMouseBinding {
 
 	abstract getLabel(): string | null;
 	abstract getAriaLabel(): string | null;
+
+	abstract get dispatchPrefix(): string;
 }
 
 export class MouseBinding extends BaseMouseBinding {
@@ -118,6 +120,10 @@ export class MouseBinding extends BaseMouseBinding {
 	getAriaLabel(): string | null {
 		return this.getBaseAriaLabel();
 	}
+
+	get dispatchPrefix(): string {
+		return 'mouse';
+	}
 }
 
 export class SelectionBinding extends BaseMouseBinding {
@@ -138,6 +144,10 @@ export class SelectionBinding extends BaseMouseBinding {
 	getAriaLabel(): string | null {
 		const result = this.getBaseAriaLabel();
 		return result && `Selection Shortcut: ${result}`;
+	}
+
+	get dispatchPrefix(): string {
+		return 'selection';
 	}
 }
 
@@ -188,7 +198,7 @@ export class ResolvedMouseBinding extends ResolvedKeybinding {
 	}
 
 	public getDispatchParts(): (string | null)[] {
-		let result = '';
+		let result = this._binding.dispatchPrefix + ' ';
 
 		if (this._binding.ctrlKey) {
 			result += 'ctrl+';

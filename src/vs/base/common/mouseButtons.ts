@@ -62,14 +62,19 @@ export class MouseBinding {
 	public readonly metaKey: boolean;
 	public readonly button: MouseButton;
 	public readonly isSelectionBinding: boolean;
+	/**
+	 * One is single click, two is double click, etc..
+	 */
+	public readonly times: number;
 
-	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton, isSelectionBinding: boolean) {
+	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton, isSelectionBinding: boolean, times: number) {
 		this.ctrlKey = ctrlKey;
 		this.shiftKey = shiftKey;
 		this.altKey = altKey;
 		this.metaKey = metaKey;
 		this.button = button;
 		this.isSelectionBinding = isSelectionBinding;
+		this.times = times;
 	}
 
 	public equals(other: MouseBinding): boolean {
@@ -80,6 +85,7 @@ export class MouseBinding {
 			&& this.metaKey === other.metaKey
 			&& this.button === other.button
 			&& this.isSelectionBinding === other.isSelectionBinding
+			&& this.times === other.times
 		);
 	}
 
@@ -88,7 +94,8 @@ export class MouseBinding {
 		const shift = this.shiftKey ? '1' : '0';
 		const alt = this.altKey ? '1' : '0';
 		const meta = this.metaKey ? '1' : '0';
-		return `${ctrl}${shift}${alt}${meta}${this.button}`;
+		const type = this.isSelectionBinding ? 's' : 'm';
+		return `${type}${this.times};${ctrl}${shift}${alt}${meta}${this.button}`;
 	}
 }
 

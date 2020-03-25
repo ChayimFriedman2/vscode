@@ -710,8 +710,51 @@ let schema: IJSONSchema = {
 		'defaultSnippets': [{ 'body': { 'key': '$1', 'command': '$2', 'when': '$3' } }],
 		'properties': {
 			'key': {
-				'type': 'string',
-				'description': nls.localize('keybindings.json.key', "Key or key sequence (separated by space)"),
+				'oneOf': [
+					{
+						'type': 'string',
+						'description': nls.localize('keybindings.json.key', "Key or key sequence (separated by space)"),
+					},
+					{
+						'required': ['type', 'button'],
+						'type': 'object',
+						'description': nls.localize('keybindings.json.key.mouse', "Mouse shortcut in the text editor"),
+						'properties': {
+							'type': {
+								'type': 'string',
+								'enum': ['mouse'],
+								'description': nls.localize('keybindings.json.key.type', "The type of the shortcut"),
+								'enumDescriptions': [nls.localize('keybindings.json.key.mouse', "Mouse shortcut in the text editor")]
+							},
+							'button': {
+								'type': 'string',
+								'description': nls.localize('keybindings.json.mouseButton', "The mouse button used in the shortcut. Can use modifiers like keys")
+							},
+							'times': {
+								'type': 'integer',
+								'description': nls.localize('keybindings.json.mouse.times', "The times you need to click the mouse button in order to trigger the command (e.g. 1 is single click, 2 is double click)"),
+								'minimum': 1
+							}
+						}
+					},
+					{
+						'required': ['type', 'button'],
+						'type': 'object',
+						'description': nls.localize('keybindings.json.key.selection', "Selection shortcut in the text editor"),
+						'properties': {
+							'type': {
+								'type': 'string',
+								'enum': ['selection'],
+								'description': nls.localize('keybindings.json.key.type', "The type of the shortcut"),
+								'enumDescriptions': [nls.localize('keybindings.json.key.selection', "Selection shortcut in the text editor")]
+							},
+							'button': {
+								'type': 'string',
+								'description': nls.localize('keybindings.json.mouseButton', "The mouse button used in the shortcut. Can use modifiers like keys")
+							}
+						}
+					}
+				]
 			},
 			'command': {
 				'type': 'string',

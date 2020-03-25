@@ -6,13 +6,12 @@
 import { Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { ScanCodeBinding } from 'vs/base/common/scanCode';
 import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
-import { MouseBinding } from 'vs/base/common/mouseButtons';
 
 export interface IKeyboardMapper {
 	dumpDebugInfo(): string;
-	resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[];
+	resolveKeybinding: (keybinding: Keybinding) => ResolvedKeybinding[];
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
-	resolveUserBinding(firstPart: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[];
+	resolveUserBinding: (firstPart: (SimpleKeybinding | ScanCodeBinding)[]) => ResolvedKeybinding[];
 }
 
 export class CachedKeyboardMapper implements IKeyboardMapper {
@@ -44,7 +43,7 @@ export class CachedKeyboardMapper implements IKeyboardMapper {
 		return this._actual.resolveKeyboardEvent(keyboardEvent);
 	}
 
-	public resolveUserBinding(parts: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[] {
+	public resolveUserBinding(parts: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {
 		return this._actual.resolveUserBinding(parts);
 	}
 }

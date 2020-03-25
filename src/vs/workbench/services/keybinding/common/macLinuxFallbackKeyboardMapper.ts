@@ -3,14 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChordKeybinding, KeyCode, Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
+import { ChordKeybinding, KeyCode, ResolvedKeybinding, SimpleKeybinding, Keybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, ScanCode, ScanCodeBinding } from 'vs/base/common/scanCode';
 import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 /**
  * A keyboard mapper to be used when reading the keymap from the OS fails.
@@ -30,10 +29,8 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 		return 'FallbackKeyboardMapper dispatching on keyCode';
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[] {
-		return keybinding instanceof MouseBinding ?
-			[new ResolvedMouseBinding(this._OS, keybinding)] :
-			[new USLayoutResolvedKeybinding(keybinding, this._OS)];
+	public resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[] {
+		return [new USLayoutResolvedKeybinding(keybinding, this._OS)];
 	}
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
@@ -121,11 +118,7 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 		return new SimpleKeybinding(binding.ctrlKey, binding.shiftKey, binding.altKey, binding.metaKey, keyCode);
 	}
 
-	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[] {
-		if (input instanceof MouseBinding) {
-			return [new ResolvedMouseBinding(this._OS, input)];
-		}
-
+	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {
 		const parts: SimpleKeybinding[] = removeElementsAfterNulls(input.map(keybinding => this._resolveSimpleUserBinding(keybinding)));
 		if (parts.length > 0) {
 			return [new USLayoutResolvedKeybinding(new ChordKeybinding(parts), this._OS)];

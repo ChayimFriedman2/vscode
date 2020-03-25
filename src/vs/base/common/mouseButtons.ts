@@ -43,7 +43,7 @@ export namespace MouseButtonUtils {
 	}
 }
 
-abstract class BaseMouseBinding {
+export abstract class BaseMouseBinding {
 
 	public readonly ctrlKey: boolean;
 	public readonly shiftKey: boolean;
@@ -168,9 +168,9 @@ export class SelectionBinding extends BaseMouseBinding {
 
 export class ResolvedMouseBinding extends ResolvedKeybinding {
 
-	private readonly _binding: MouseBinding;
+	private readonly _binding: BaseMouseBinding;
 
-	constructor(binding: MouseBinding) {
+	constructor(binding: BaseMouseBinding) {
 		super();
 		this._binding = binding;
 	}

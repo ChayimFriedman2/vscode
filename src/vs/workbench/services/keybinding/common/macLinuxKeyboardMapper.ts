@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CharCode } from 'vs/base/common/charCode';
-import { KeyCode, KeyCodeUtils, Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
+import { KeyCode, KeyCodeUtils, ResolvedKeybinding, SimpleKeybinding, Keybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, IMMUTABLE_KEY_CODE_TO_CODE, ScanCode, ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
 import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
-import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 export interface IMacLinuxKeyMapping {
 	value: string;
@@ -964,11 +963,7 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		return null;
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[] {
-		if (keybinding instanceof MouseBinding) {
-			return [new ResolvedMouseBinding(this._OS, keybinding)];
-		}
-
+	public resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[] {
 		let chordParts: ScanCodeBinding[][] = [];
 		for (let part of keybinding.parts) {
 			chordParts.push(this.simpleKeybindingToScanCodeBinding(part));
@@ -1066,11 +1061,7 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		return this.simpleKeybindingToScanCodeBinding(binding);
 	}
 
-	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[] {
-		if (input instanceof MouseBinding) {
-			return [new ResolvedMouseBinding(this._OS, input)];
-		}
-
+	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {
 		const parts: ScanCodeBinding[][] = input.map(keybinding => this._resolveSimpleUserBinding(keybinding));
 		return this._toResolvedKeybinding(parts);
 	}

@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, Keybinding, SimpleKeybinding, createKeybinding } from 'vs/base/common/keyCodes';
+import { KeyCode, Keybinding, SimpleKeybinding, createKeybinding, ChordKeybinding } from 'vs/base/common/keyCodes';
 import { OS, OperatingSystem } from 'vs/base/common/platform';
 import { CommandsRegistry, ICommandHandler, ICommandHandlerDescription } from 'vs/platform/commands/common/commands';
 import { ContextKeyExpression } from 'vs/platform/contextkey/common/contextkey';
 import { Registry } from 'vs/platform/registry/common/platform';
-import { SelectionBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding } from 'vs/base/common/mouseButtons';
 
 export interface IKeybindingItem {
-	keybinding: Keybinding | SelectionBinding;
+	keybinding: Keybinding | MouseBinding;
 	command: string;
 	commandArgs?: any;
 	when: ContextKeyExpression | null | undefined;
@@ -44,10 +44,10 @@ export interface IKeybindingRule extends IKeybindings {
 }
 
 export interface IKeybindingRule2 {
-	primary: Keybinding | SelectionBinding | null;
-	win?: { primary: Keybinding | SelectionBinding | null; } | null;
-	linux?: { primary: Keybinding | SelectionBinding | null; } | null;
-	mac?: { primary: Keybinding | SelectionBinding | null; } | null;
+	primary: Keybinding | MouseBinding | null;
+	win?: { primary: Keybinding | MouseBinding | null; } | null;
+	linux?: { primary: Keybinding | MouseBinding | null; } | null;
+	mac?: { primary: Keybinding | MouseBinding | null; } | null;
 	id: string;
 	args?: any;
 	weight: number;
@@ -110,7 +110,7 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 	/**
 	 * Take current platform into account and reduce to primary & secondary.
 	 */
-	private static bindToCurrentPlatform2(kb: IKeybindingRule2): { primary?: Keybinding | SelectionBinding | null; } {
+	private static bindToCurrentPlatform2(kb: IKeybindingRule2): { primary?: Keybinding | MouseBinding | null; } {
 		if (OS === OperatingSystem.Windows) {
 			if (kb && kb.win) {
 				return kb.win;
@@ -210,8 +210,8 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 		}
 	}
 
-	private _registerDefaultKeybinding(keybinding: Keybinding, commandId: string, commandArgs: any, weight1: number, weight2: number, when: ContextKeyExpression | null | undefined): void {
-		if (OS === OperatingSystem.Windows) {
+	private _registerDefaultKeybinding(keybinding: Keybinding | MouseBinding, commandId: string, commandArgs: any, weight1: number, weight2: number, when: ContextKeyExpression | null | undefined): void {
+		if (OS === OperatingSystem.Windows && keybinding instanceof ChordKeybinding) {
 			this._assertNoCtrlAlt(keybinding.parts[0], commandId);
 		}
 		this._coreKeybindings.push({

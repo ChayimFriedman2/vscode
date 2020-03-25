@@ -6,11 +6,11 @@
 import { ChordKeybinding, KeyCode, Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, ScanCode, ScanCodeBinding } from 'vs/base/common/scanCode';
-import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 /**
  * A keyboard mapper to be used when reading the keymap from the OS fails.
@@ -30,9 +30,9 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 		return 'FallbackKeyboardMapper dispatching on keyCode';
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
-		return keybinding instanceof SelectionBinding ?
-			[new ResolvedSelectionBinding(this._OS, keybinding)] :
+	public resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[] {
+		return keybinding instanceof MouseBinding ?
+			[new ResolvedMouseBinding(this._OS, keybinding)] :
 			[new USLayoutResolvedKeybinding(keybinding, this._OS)];
 	}
 
@@ -45,22 +45,6 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 			keyboardEvent.keyCode
 		);
 		return new USLayoutResolvedKeybinding(keybinding.toChord(), this._OS);
-	}
-
-	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
-		let keybinding = new SimpleKeybinding(
-			mouseEvent.ctrlKey,
-			mouseEvent.shiftKey,
-			mouseEvent.altKey,
-			mouseEvent.metaKey,
-			mouseEvent.keyCode
-		);
-		return new USLayoutResolvedKeybinding(keybinding.toChord(), this._OS);
-	}
-
-	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
-		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
-		return new ResolvedSelectionBinding(this._OS, binding);
 	}
 
 	private _scanCodeToKeyCode(scanCode: ScanCode): KeyCode {
@@ -137,9 +121,9 @@ export class MacLinuxFallbackKeyboardMapper implements IKeyboardMapper {
 		return new SimpleKeybinding(binding.ctrlKey, binding.shiftKey, binding.altKey, binding.metaKey, keyCode);
 	}
 
-	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding): ResolvedKeybinding[] {
-		if (input instanceof SelectionBinding) {
-			return [new ResolvedSelectionBinding(this._OS, input)];
+	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[] {
+		if (input instanceof MouseBinding) {
+			return [new ResolvedMouseBinding(this._OS, input)];
 		}
 
 		const parts: SimpleKeybinding[] = removeElementsAfterNulls(input.map(keybinding => this._resolveSimpleUserBinding(keybinding)));

@@ -8,11 +8,11 @@ import { KeyCode, KeyCodeUtils, Keybinding, ResolvedKeybinding, SimpleKeybinding
 import { UILabelProvider } from 'vs/base/common/keybindingLabels';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, ScanCode, ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
-import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
 import { removeElementsAfterNulls } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 export interface IWindowsKeyMapping {
 	vkey: string;
@@ -460,9 +460,9 @@ export class WindowsKeyboardMapper implements IKeyboardMapper {
 		return this._keyCodeToLabel[keyCode] || KeyCodeUtils.toString(KeyCode.Unknown);
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
-		if (keybinding instanceof SelectionBinding) {
-			return [new ResolvedSelectionBinding(OperatingSystem.Windows, keybinding)];
+	public resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[] {
+		if (keybinding instanceof MouseBinding) {
+			return [new ResolvedMouseBinding(OperatingSystem.Windows, keybinding)];
 		}
 
 		const parts = keybinding.parts;
@@ -478,16 +478,6 @@ export class WindowsKeyboardMapper implements IKeyboardMapper {
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): WindowsNativeResolvedKeybinding {
 		const keybinding = new SimpleKeybinding(keyboardEvent.ctrlKey, keyboardEvent.shiftKey, keyboardEvent.altKey, keyboardEvent.metaKey, keyboardEvent.keyCode);
 		return new WindowsNativeResolvedKeybinding(this, [keybinding]);
-	}
-
-	public resolveMouseEvent(mouseEvent: IMouseEvent): WindowsNativeResolvedKeybinding {
-		const keybinding = new SimpleKeybinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.keyCode);
-		return new WindowsNativeResolvedKeybinding(this, [keybinding]);
-	}
-
-	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
-		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
-		return new ResolvedSelectionBinding(OperatingSystem.Windows, binding);
 	}
 
 	private _resolveSimpleUserBinding(binding: SimpleKeybinding | ScanCodeBinding | null): SimpleKeybinding | null {
@@ -507,9 +497,9 @@ export class WindowsKeyboardMapper implements IKeyboardMapper {
 		return new SimpleKeybinding(binding.ctrlKey, binding.shiftKey, binding.altKey, binding.metaKey, keyCode);
 	}
 
-	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {
-		if (input instanceof SelectionBinding) {
-			return [new ResolvedSelectionBinding(OperatingSystem.Windows, input)];
+	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[] {
+		if (input instanceof MouseBinding) {
+			return [new ResolvedMouseBinding(OperatingSystem.Windows, input)];
 		}
 
 		const parts: SimpleKeybinding[] = removeElementsAfterNulls(input.map(keybinding => this._resolveSimpleUserBinding(keybinding)));

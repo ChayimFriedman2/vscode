@@ -6,7 +6,7 @@
 import * as browser from 'vs/base/browser/browser';
 import { IframeUtils } from 'vs/base/browser/iframe';
 import * as platform from 'vs/base/common/platform';
-import { KeyCode } from 'vs/base/common/keyCodes';
+import { MouseButton } from 'vs/base/common/mouseButtons';
 
 export interface IMouseEvent {
 	readonly browserEvent: MouseEvent;
@@ -23,7 +23,7 @@ export interface IMouseEvent {
 	readonly altKey: boolean;
 	readonly metaKey: boolean;
 	readonly timestamp: number;
-	readonly keyCode: KeyCode;
+	readonly button: MouseButton;
 
 	preventDefault(): void;
 	stopPropagation(): void;
@@ -46,7 +46,7 @@ export class StandardMouseEvent implements IMouseEvent {
 	public readonly altKey: boolean;
 	public readonly metaKey: boolean;
 	public readonly timestamp: number;
-	public readonly keyCode: KeyCode;
+	readonly button: MouseButton;
 
 	constructor(e: MouseEvent) {
 		this.timestamp = Date.now();
@@ -55,7 +55,7 @@ export class StandardMouseEvent implements IMouseEvent {
 		this.middleButton = e.button === 1;
 		this.rightButton = e.button === 2;
 		this.buttons = e.buttons;
-		this.keyCode = e.button + KeyCode.MOUSE_LEFT;
+		this.button = e.button;
 
 		this.target = <HTMLElement>e.target;
 

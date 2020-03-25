@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, ResolvedKeybinding, ResolvedKeybindingPart, SimpleKeybinding } from 'vs/base/common/keyCodes';
+import { ResolvedKeybinding, ResolvedKeybindingPart } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { UILabelProvider, AriaLabelProvider, UserSettingsLabelProvider } from 'vs/base/common/keybindingLabels';
-import { ScanCodeBinding, ScanCode } from 'vs/base/common/scanCode';
 
 export const enum MouseButton {
 	Left = 0,
@@ -20,6 +19,11 @@ export const enum MouseButton {
 export const UserSettingsSelectionPrefix: string = 'sel ';
 export const UiSelectionPrefix: string = 'SEL ';
 const AriaSelectionPrefix: string = 'SEL ';
+
+/**
+ * The prefix used in keybindings.json for mouse bindings in order to distinguish them from regular bindings.
+ */
+export const UserSettingsMousePrefix: string = 'mouse ';
 
 const uiStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
 const uiButtonToStr = ['LMB', 'MMB', 'RMB'];
@@ -49,48 +53,34 @@ export namespace MouseButtonUtils {
 	export function fromUserSettingsString(button: string): MouseButton {
 		return userSettingsStrToButton[button.toLowerCase()];
 	}
-
-	export function toKeyCode(button: MouseButton): KeyCode {
-		return button + KeyCode.MOUSE_LEFT;
-	}
-	export function fromKeyCode(key: KeyCode): MouseButton {
-		return key - KeyCode.MOUSE_LEFT;
-	}
-
-	export function toScanCode(button: MouseButton): ScanCode {
-		return button + ScanCode.MouseLeft;
-	}
-	export function fromScanCode(key: ScanCode): MouseButton {
-		return key - ScanCode.MouseLeft;
-	}
 }
 
-export class SelectionBinding {
+export class MouseBinding {
 	public readonly ctrlKey: boolean;
 	public readonly shiftKey: boolean;
 	public readonly altKey: boolean;
 	public readonly metaKey: boolean;
 	public readonly button: MouseButton;
+	public readonly isSelectionBinding: boolean;
 
-	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton) {
+	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton, isSelectionBinding: boolean) {
 		this.ctrlKey = ctrlKey;
 		this.shiftKey = shiftKey;
 		this.altKey = altKey;
 		this.metaKey = metaKey;
 		this.button = button;
+		this.isSelectionBinding = isSelectionBinding;
 	}
 
-	public equals(other: SimpleKeybinding | ScanCodeBinding | SelectionBinding): boolean {
-		if (this.ctrlKey !== other.ctrlKey || this.shiftKey !== other.shiftKey || this.altKey !== other.altKey || this.metaKey !== other.metaKey) {
-			return false;
-		}
-		if (other instanceof SelectionBinding) {
-			return other.button === this.button;
-		} else if (other instanceof SimpleKeybinding) {
-			return MouseButtonUtils.fromKeyCode(other.keyCode) === this.button;
-		} else {
-			return MouseButtonUtils.fromScanCode(other.scanCode) === this.button;
-		}
+	public equals(other: MouseBinding): boolean {
+		return (
+			this.ctrlKey === other.ctrlKey
+			&& this.shiftKey === other.shiftKey
+			&& this.altKey === other.altKey
+			&& this.metaKey === other.metaKey
+			&& this.button === other.button
+			&& this.isSelectionBinding === other.isSelectionBinding
+		);
 	}
 
 	public getHashCode(): string {
@@ -102,23 +92,33 @@ export class SelectionBinding {
 	}
 }
 
-export class ResolvedSelectionBinding extends ResolvedKeybinding {
+export class ResolvedMouseBinding extends ResolvedKeybinding {
 
 	private readonly _os: OperatingSystem;
-	private readonly _binding: SelectionBinding;
+	private readonly _binding: MouseBinding;
 
-	constructor(os: OperatingSystem, binding: SelectionBinding) {
+	constructor(os: OperatingSystem, binding: MouseBinding) {
 		super();
 		this._os = os;
 		this._binding = binding;
 	}
 
+	private get uiPrefix() {
+		return this._binding.isSelectionBinding ? UiSelectionPrefix : '';
+	}
+	private get userSettingsPrefix() {
+		return this._binding.isSelectionBinding ? UserSettingsSelectionPrefix : UserSettingsMousePrefix;
+	}
+	private get ariaPrefix() {
+		return this._binding.isSelectionBinding ? AriaSelectionPrefix : '';
+	}
+
 	public getLabel(): string | null {
-		return UiSelectionPrefix + UILabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toString(binding.button));
+		return this.uiPrefix + UILabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toString(binding.button));
 	}
 
 	public getAriaLabel(): string | null {
-		return AriaSelectionPrefix + AriaLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toAriaString(binding.button));
+		return this.ariaPrefix + AriaLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toAriaString(binding.button));
 	}
 
 	public getElectronAccelerator(): string | null {
@@ -127,11 +127,11 @@ export class ResolvedSelectionBinding extends ResolvedKeybinding {
 	}
 
 	public getUserSettingsLabel(): string | null {
-		return UserSettingsSelectionPrefix + UserSettingsLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toUserSettingsString(binding.button));
+		return this.userSettingsPrefix + UserSettingsLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toUserSettingsString(binding.button));
 	}
 
 	public isWYSIWYG(): boolean {
-		return UserSettingsSelectionPrefix === UiSelectionPrefix;
+		return this.userSettingsPrefix === this.uiPrefix;
 	}
 
 	public isChord(): boolean {
@@ -146,7 +146,7 @@ export class ResolvedSelectionBinding extends ResolvedKeybinding {
 			this._binding.metaKey,
 			MouseButtonUtils.toString(this._binding.button),
 			MouseButtonUtils.toAriaString(this._binding.button),
-			true
+			this._binding.isSelectionBinding
 		)];
 	}
 

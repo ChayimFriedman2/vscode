@@ -203,9 +203,6 @@ export const enum ScanCode {
 	MailReply,
 	MailForward,
 	MailSend,
-	MouseLeft,
-	MouseMiddle,
-	MouseRight,
 
 	MAX_VALUE
 }
@@ -467,9 +464,6 @@ export class ScanCodeBinding {
 	d(ScanCode.MailReply, 'MailReply');
 	d(ScanCode.MailForward, 'MailForward');
 	d(ScanCode.MailSend, 'MailSend');
-	d(ScanCode.MouseLeft, 'MouseLeft');
-	d(ScanCode.MouseMiddle, 'MouseMiddle');
-	d(ScanCode.MouseRight, 'MouseRight');
 })();
 
 (function () {
@@ -692,7 +686,4 @@ export class ScanCodeBinding {
 	define(ScanCode.MailReply, KeyCode.Unknown);
 	define(ScanCode.MailForward, KeyCode.Unknown);
 	define(ScanCode.MailSend, KeyCode.Unknown);
-	define(ScanCode.MouseLeft, KeyCode.MOUSE_LEFT);
-	define(ScanCode.MouseMiddle, KeyCode.MOUSE_MIDDLE);
-	define(ScanCode.MouseRight, KeyCode.MOUSE_RIGHT);
 })();

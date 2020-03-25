@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, KeyCodeUtils, Keybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
+import { KeyCode, KeyCodeUtils, SimpleKeybinding, ChordKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
 
@@ -12,7 +12,7 @@ import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolv
  */
 export class USLayoutResolvedKeybinding extends BaseResolvedKeybinding<SimpleKeybinding> {
 
-	constructor(actual: Keybinding, os: OperatingSystem) {
+	constructor(actual: ChordKeybinding, os: OperatingSystem) {
 		super(os, actual.parts);
 	}
 

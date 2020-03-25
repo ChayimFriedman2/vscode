@@ -5,16 +5,14 @@
 
 import { Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { ScanCodeBinding } from 'vs/base/common/scanCode';
-import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
+import { MouseBinding } from 'vs/base/common/mouseButtons';
 
 export interface IKeyboardMapper {
 	dumpDebugInfo(): string;
-	resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[];
+	resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[];
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
-	resolveMouseEvent(keyboardEvent: IMouseEvent): ResolvedKeybinding;
-	resolveSelectionEvent: (keyboardEvent: IMouseEvent) => ResolvedSelectionBinding;
-	resolveUserBinding(firstPart: (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding): ResolvedKeybinding[];
+	resolveUserBinding(firstPart: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[];
 }
 
 export class CachedKeyboardMapper implements IKeyboardMapper {
@@ -31,7 +29,7 @@ export class CachedKeyboardMapper implements IKeyboardMapper {
 		return this._actual.dumpDebugInfo();
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
+	public resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[] {
 		const hashCode = keybinding.getHashCode();
 		const resolved = this._cache.get(hashCode);
 		if (!resolved) {
@@ -46,15 +44,7 @@ export class CachedKeyboardMapper implements IKeyboardMapper {
 		return this._actual.resolveKeyboardEvent(keyboardEvent);
 	}
 
-	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
-		return this._actual.resolveMouseEvent(mouseEvent);
-	}
-
-	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
-		return this._actual.resolveSelectionEvent(mouseEvent);
-	}
-
-	public resolveUserBinding(parts: (SimpleKeybinding | ScanCodeBinding)[]): ResolvedKeybinding[] {
+	public resolveUserBinding(parts: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[] {
 		return this._actual.resolveUserBinding(parts);
 	}
 }

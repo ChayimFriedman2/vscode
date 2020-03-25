@@ -11,13 +11,14 @@ import { KeyCode, Keybinding, ResolvedKeybinding } from 'vs/base/common/keyCodes
 import { Disposable, IDisposable } from 'vs/base/common/lifecycle';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { IContextKeyService, IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextkey';
-import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IMouseEvent, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution, IEditorMouseEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IResolveResult, KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from 'vs/base/common/actions';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
+import { OS } from 'vs/base/common/platform';
 
 interface CurrentChord {
 	keypress: string;
@@ -65,10 +66,8 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	protected abstract _getResolver(): KeybindingResolver;
 	protected abstract _documentHasFocus(): boolean;
-	public abstract resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[];
+	public abstract resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[];
 	public abstract resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
-	public abstract resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding;
-	public abstract resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding;
 	public abstract resolveUserBinding(userBinding: string): ResolvedKeybinding[];
 	public abstract registerSchemaContribution(contribution: KeybindingsSchemaContribution): void;
 	public abstract _dumpDebugInfo(): string;
@@ -164,24 +163,17 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		}
 	}
 
-	protected _dispatch(e: IKeyboardEvent, target: IContextKeyServiceTarget): boolean {
-		return this._doDispatch(this.resolveKeyboardEvent(e), target);
+	private _createMouseBinding(e: IMouseEvent, isSelection: boolean): MouseBinding {
+		return new MouseBinding(e.ctrlKey, e.shiftKey, e.altKey, e.metaKey, e.button, isSelection);
 	}
 
-	protected _dispatchMouse(e: IMouseEvent, target: IContextKeyServiceTarget): boolean {
-		return this._doDispatch(this.resolveMouseEvent(e), target);
-	}
-
-	public startSelection(mouseEvent: IMouseEvent, target: IContextKeyServiceTarget): boolean {
-		const resolvedBinding = this.resolveSelectionEvent(mouseEvent);
-		this._selectionCommand = this._getCommand(resolvedBinding, target);
-		if (!this._selectionCommand || !this._selectionCommand.commandId) {
-			this._selectionCommand = null;
-		}
+	public onEditorMouseDown(mouseEvent: IEditorMouseEvent): boolean {
+		const resolvedBinding = new ResolvedMouseBinding(OS, this._createMouseBinding(mouseEvent, true));
+		this._selectionCommand = this._getCommand(resolvedBinding, mouseEvent.target);
 		return this._selectionCommand !== null;
 	}
 
-	public endSelection(): Thenable<void> {
+	public completeSelection(): Promise<void> {
 		const command = this._selectionCommand!;
 		this._selectionCommand = null;
 		return this._executeCommand(command);
@@ -189,6 +181,22 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	public cancelSelection(): void {
 		this._selectionCommand = null;
+	}
+
+	public onEditorMouseUp(mouseEvent: IEditorMouseEvent): void {
+		const resolvedBinding = new ResolvedMouseBinding(OS, this._createMouseBinding(mouseEvent, false));
+		const command = this._getCommand(resolvedBinding, mouseEvent.target);
+		if (command) {
+			// Use Object.create() instead of object literal so user has no access to Object's method
+			const position = Object.create(null);
+			position.lineNumber = mouseEvent.position.lineNumber;
+			position.column = mouseEvent.position.column;
+			this._executeCommand(command, { position });
+		}
+	}
+
+	protected _dispatch(e: IKeyboardEvent, target: IContextKeyServiceTarget): boolean {
+		return this._doDispatch(this.resolveKeyboardEvent(e), target);
 	}
 
 	private _getCommand(keybinding: ResolvedKeybinding, target: IContextKeyServiceTarget): IResolveResult | null {
@@ -238,14 +246,50 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		return shouldPreventDefault;
 	}
 
-	private _executeCommand(resolveResult: IResolveResult): Promise<void> {
+	/**
+	 * Digs into an object and peeks up a property.
+	 * @param obj The object to dig into.
+	 * @param property A string specifies the property, using dot notation. Although array are not supported, you can simulate them using `array.index` syntax (e.g. `property.5.property` or `5.property`) because of JavaScript's array are objects.
+	 * @throws {TypeError} If the property was not found.
+	 */
+	private static peekObjectProperty(obj: any, property: string): any {
+		return property.split('.').reduce((obj: any, property: string) => obj[property], obj);
+	}
+
+	private static parseArg(commandArg: any, args: any): any {
+		return (commandArg as string).replace(/\$\{(.*?)\}/g, (match: string, arg: string) => {
+			return this.peekObjectProperty(args, arg);
+		});
+	}
+
+	private static parseArgs(commandArgs: any, args: any): any {
+		if (commandArgs === undefined) {
+			return undefined;
+		}
+		if (args === undefined) {
+			return commandArgs;
+		}
+		if (!Array.isArray(commandArgs)) {
+			return this.parseArg(commandArgs, args);
+		}
+		return commandArgs.map(commandArg => this.parseArg(commandArg, args));
+	}
+
+	private _executeCommand(resolveResult: IResolveResult, args?: any): Promise<void> {
+		let parsedArgs: any;
+		try {
+			parsedArgs = AbstractKeybindingService.parseArgs(resolveResult.commandArgs, args);
+		} catch {
+			this._notificationService.warn(nls.localize('invalidArg', "Invalid argument for command: property not found"));
+			return Promise.resolve();
+		}
 		const commandId = resolveResult.commandId!;
 		this._telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: commandId, from: 'keybinding' });
-		if (typeof resolveResult.commandArgs === 'undefined') {
+		if (typeof parsedArgs === 'undefined') {
 			return this._commandService.executeCommand(commandId).then(undefined, err => this._notificationService.warn(err));
 		}
 		else {
-			return this._commandService.executeCommand(commandId, resolveResult.commandArgs).then(undefined, err => this._notificationService.warn(err));
+			return this._commandService.executeCommand(commandId, parsedArgs).then(undefined, err => this._notificationService.warn(err));
 		}
 	}
 

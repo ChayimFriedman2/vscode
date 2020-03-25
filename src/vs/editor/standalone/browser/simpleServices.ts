@@ -31,7 +31,7 @@ import { IContextKeyService, ContextKeyExpression } from 'vs/platform/contextkey
 import { IConfirmation, IConfirmationResult, IDialogOptions, IDialogService, IShowResult } from 'vs/platform/dialogs/common/dialogs';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { AbstractKeybindingService } from 'vs/platform/keybinding/common/abstractKeybindingService';
-import { IKeybindingEvent, IKeyboardEvent, KeybindingSource, KeybindingsSchemaContribution, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeyboardEvent, KeybindingSource, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
 import { KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { IKeybindingItem, KeybindingsRegistry } from 'vs/platform/keybinding/common/keybindingsRegistry';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
@@ -47,7 +47,7 @@ import { SimpleServicesNLS } from 'vs/editor/common/standaloneStrings';
 import { ClassifiedEvent, StrictPropertyCheck, GDPRClassification } from 'vs/platform/telemetry/common/gdprTypings';
 import { basename } from 'vs/base/common/resources';
 import { ICodeEditorService } from 'vs/editor/browser/services/codeEditorService';
-import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 export class SimpleModel implements IResolvedTextEditorModel {
 
@@ -381,9 +381,9 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
 		return result;
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
-		return keybinding instanceof SelectionBinding ?
-			[new ResolvedSelectionBinding(OS, keybinding)] :
+	public resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[] {
+		return keybinding instanceof MouseBinding ?
+			[new ResolvedMouseBinding(OS, keybinding)] :
 			[new USLayoutResolvedKeybinding(keybinding, OS)];
 	}
 
@@ -396,22 +396,6 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
 			keyboardEvent.keyCode
 		).toChord();
 		return new USLayoutResolvedKeybinding(keybinding, OS);
-	}
-
-	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
-		let keybinding = new SimpleKeybinding(
-			mouseEvent.ctrlKey,
-			mouseEvent.shiftKey,
-			mouseEvent.altKey,
-			mouseEvent.metaKey,
-			mouseEvent.keyCode
-		).toChord();
-		return new USLayoutResolvedKeybinding(keybinding, OS);
-	}
-
-	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
-		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
-		return new ResolvedSelectionBinding(OS, binding);
 	}
 
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {

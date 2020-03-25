@@ -25,7 +25,7 @@ import { DefineKeybindingWidget, KeybindingsSearchWidget, KeybindingsSearchOptio
 import {
 	IKeybindingsEditorPane, CONTEXT_KEYBINDING_FOCUS, CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDINGS_SEARCH_FOCUS, KEYBINDINGS_EDITOR_COMMAND_REMOVE, KEYBINDINGS_EDITOR_COMMAND_COPY,
 	KEYBINDINGS_EDITOR_COMMAND_RESET, KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND, KEYBINDINGS_EDITOR_COMMAND_DEFINE, KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR,
-	KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS, KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE, KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN, KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG
+	KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS, KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE, KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN, KEYBINDINGS_EDITOR_COMMAND_DEFINE_SELECTION, KEYBINDINGS_EDITOR_COMMAND_DEFINE_MOUSE
 } from 'vs/workbench/contrib/preferences/common/preferences';
 import { IContextMenuService, IContextViewService } from 'vs/platform/contextview/browser/contextView';
 import { IKeybindingEditingService } from 'vs/workbench/services/keybinding/common/keybindingEditing';
@@ -46,7 +46,7 @@ import { IStorageService } from 'vs/platform/storage/common/storage';
 import { InputBox, MessageType } from 'vs/base/browser/ui/inputbox/inputBox';
 import { Emitter, Event } from 'vs/base/common/event';
 import { MenuRegistry, MenuId, isIMenuItem } from 'vs/platform/actions/common/actions';
-import { UserSettingsSelectionPrefix } from 'vs/base/common/mouseButtons';
+import { UserSettingsSelectionPrefix, UserSettingsMousePrefix } from 'vs/base/common/mouseButtons';
 
 const $ = DOM.$;
 
@@ -188,23 +188,36 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		return focusedElement && focusedElement.templateId === KEYBINDING_ENTRY_TEMPLATE_ID ? <IKeybindingItemEntry>focusedElement : null;
 	}
 
-	/**
-	 * Returns false if the binding uses right or left mouse buttons without modifiers.
-	 */
-	private _isValidMouseBinding(binding: string): boolean {
-		const parts = binding.split(' ');
-		return !parts.some(part => part === 'lmb' || part === 'rmb');
-	}
-
 	defineKeybinding(keybindingEntry: IKeybindingItemEntry): Promise<any> {
 		this.selectEntry(keybindingEntry);
 		this.showOverlayContainer();
 		return this.defineKeybindingWidget.define().then(key => {
 			if (key) {
-				if (!this._isValidMouseBinding(key)) {
+				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE, keybindingEntry.keybindingItem.command, key);
+				return this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when);
+			}
+			return null;
+		}).then(() => {
+			this.hideOverlayContainer();
+			this.selectEntry(keybindingEntry);
+		}, error => {
+			this.hideOverlayContainer();
+			this.onKeybindingEditingError(error);
+			this.selectEntry(keybindingEntry);
+			return error;
+		});
+	}
+
+	private defineMouseBinding(keybindingEntry: IKeybindingItemEntry): Promise<any> {
+		this.selectEntry(keybindingEntry);
+		this.showOverlayContainer();
+		return this.defineKeybindingWidget.define(true).then(key => {
+			if (key) {
+				if (key === 'lmb' || key === 'rmb') {
 					return Promise.reject(new Error(localize('cannotBindLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
 				}
-				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE, keybindingEntry.keybindingItem.command, key);
+				key = UserSettingsMousePrefix + key;
+				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_MOUSE, keybindingEntry.keybindingItem.command, key);
 				return this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when);
 			}
 			return null;
@@ -221,26 +234,21 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 
 	defineSelectionBinding(keybindingEntry: IKeybindingItemEntry): Promise<any> {
 		this.selectEntry(keybindingEntry);
-		this.defineKeybindingWidget.enableChord = false;
-		this.defineKeybindingWidget.recordOnlyMouse = true;
 		this.showOverlayContainer();
-		return this.defineKeybindingWidget.define().then(key => {
+		return this.defineKeybindingWidget.define(true, true).then(key => {
 			if (key) {
-				if (!this._isValidMouseBinding(key)) {
-					return Promise.reject(new Error(localize('cannotBindLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
+				if (key === 'lmb' || key === 'rmb' || key === 'mmb') {
+					return Promise.reject(new Error(localize('cannotBindLmbMmbRmbWithoutModifiers', "Can't use left, middle or right mouse buttons in a selection shortcut without modifiers.")));
 				}
 				key = UserSettingsSelectionPrefix + key;
-				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG, keybindingEntry.keybindingItem.command, key);
+				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_SELECTION, keybindingEntry.keybindingItem.command, key);
 				return this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {
 			this.hideOverlayContainer();
-			this.defineKeybindingWidget.enableChord = true;
-			this.defineKeybindingWidget.recordOnlyMouse = false;
 			this.selectEntry(keybindingEntry);
 		}, error => {
-			this.defineKeybindingWidget.enableChord = true;
 			this.hideOverlayContainer();
 			this.onKeybindingEditingError(error);
 			this.selectEntry(keybindingEntry);
@@ -697,6 +705,7 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 					this.createCopyCommandAction(<IKeybindingItemEntry>e.element),
 					new Separator(),
 					this.createDefineAction(<IKeybindingItemEntry>e.element),
+					this.createDefineMouseAction(<IKeybindingItemEntry>e.element),
 					this.createDefineSelectionAction(<IKeybindingItemEntry>e.element),
 					this.createRemoveAction(<IKeybindingItemEntry>e.element),
 					this.createResetAction(<IKeybindingItemEntry>e.element),
@@ -727,11 +736,20 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		};
 	}
 
+	private createDefineMouseAction(keybindingItemEntry: IKeybindingItemEntry): IAction {
+		return <IAction>{
+			label: keybindingItemEntry.keybindingItem.keybinding ? localize('changeMouse', "Change Mouse Binding") : localize('addMouse', "Add Mouse Binding"),
+			enabled: true,
+			id: KEYBINDINGS_EDITOR_COMMAND_DEFINE_MOUSE,
+			run: () => this.defineMouseBinding(keybindingItemEntry)
+		};
+	}
+
 	private createDefineSelectionAction(keybindingItemEntry: IKeybindingItemEntry): IAction {
 		return <IAction>{
 			label: keybindingItemEntry.keybindingItem.keybinding ? localize('changeSelection', "Change Selection Binding") : localize('addSelection', "Add Selection Binding"),
 			enabled: true,
-			id: KEYBINDINGS_EDITOR_COMMAND_DEFINE_DRAG,
+			id: KEYBINDINGS_EDITOR_COMMAND_DEFINE_SELECTION,
 			run: () => this.defineSelectionBinding(keybindingItemEntry)
 		};
 	}

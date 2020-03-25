@@ -31,6 +31,7 @@ export function createMonacoBaseAPI(): typeof monaco {
 		CancellationTokenSource: CancellationTokenSource,
 		Emitter: Emitter,
 		KeyCode: standaloneEnums.KeyCode,
+		MouseButton: standaloneEnums.MouseButton,
 		KeyMod: KeyMod,
 		Position: Position,
 		Range: Range,

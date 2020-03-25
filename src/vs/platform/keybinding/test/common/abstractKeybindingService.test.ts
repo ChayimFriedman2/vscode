@@ -9,14 +9,14 @@ import Severity from 'vs/base/common/severity';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { ContextKeyExpr, IContext, IContextKeyService, IContextKeyServiceTarget, ContextKeyExpression } from 'vs/platform/contextkey/common/contextkey';
 import { AbstractKeybindingService } from 'vs/platform/keybinding/common/abstractKeybindingService';
-import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
 import { KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
 import { INotification, INotificationService, IPromptChoice, IPromptOptions, NoOpNotification, IStatusMessageOptions } from 'vs/platform/notification/common/notification';
 import { NullTelemetryService } from 'vs/platform/telemetry/common/telemetryUtils';
 import { Disposable } from 'vs/base/common/lifecycle';
-import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 function createContext(ctx: any) {
 	return {
@@ -49,8 +49,8 @@ suite('AbstractKeybindingService', () => {
 			return true;
 		}
 
-		public resolveKeybinding(kb: Keybinding | SelectionBinding): ResolvedKeybinding[] {
-			return kb instanceof SelectionBinding ? [new ResolvedSelectionBinding(OS, kb)] : [new USLayoutResolvedKeybinding(kb, OS)];
+		public resolveKeybinding(kb: Keybinding | MouseBinding): ResolvedKeybinding[] {
+			return kb instanceof MouseBinding ? [new ResolvedMouseBinding(OS, kb)] : [new USLayoutResolvedKeybinding(kb, OS)];
 		}
 
 		public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
@@ -62,22 +62,6 @@ suite('AbstractKeybindingService', () => {
 				keyboardEvent.keyCode
 			).toChord();
 			return this.resolveKeybinding(keybinding)[0];
-		}
-
-		public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
-			let keybinding = new SimpleKeybinding(
-				mouseEvent.ctrlKey,
-				mouseEvent.shiftKey,
-				mouseEvent.altKey,
-				mouseEvent.metaKey,
-				mouseEvent.keyCode
-			).toChord();
-			return this.resolveKeybinding(keybinding)[0];
-		}
-
-		public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
-			const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
-			return new ResolvedSelectionBinding(OS, binding);
 		}
 
 		public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {
@@ -200,7 +184,7 @@ suite('AbstractKeybindingService', () => {
 	});
 
 	function kbItem(keybinding: number, command: string, when?: ContextKeyExpression): ResolvedKeybindingItem {
-		const resolvedKeybinding = (keybinding !== 0 ? new USLayoutResolvedKeybinding(createKeybinding(keybinding, OS)!, OS) : undefined);
+		const resolvedKeybinding = (keybinding !== 0 ? new USLayoutResolvedKeybinding(<Keybinding>createKeybinding(keybinding, OS)!, OS) : undefined);
 		return new ResolvedKeybindingItem(
 			resolvedKeybinding,
 			command,
@@ -211,7 +195,7 @@ suite('AbstractKeybindingService', () => {
 	}
 
 	function toUsLabel(keybinding: number): string {
-		const usResolvedKeybinding = new USLayoutResolvedKeybinding(createKeybinding(keybinding, OS)!, OS);
+		const usResolvedKeybinding = new USLayoutResolvedKeybinding(<Keybinding>createKeybinding(keybinding, OS)!, OS);
 		return usResolvedKeybinding.getLabel()!;
 	}
 

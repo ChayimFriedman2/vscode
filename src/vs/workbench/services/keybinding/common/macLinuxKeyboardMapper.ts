@@ -7,10 +7,10 @@ import { CharCode } from 'vs/base/common/charCode';
 import { KeyCode, KeyCodeUtils, Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { IMMUTABLE_CODE_TO_KEY_CODE, IMMUTABLE_KEY_CODE_TO_CODE, ScanCode, ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
-import { IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IKeyboardMapper } from 'vs/workbench/services/keybinding/common/keyboardMapper';
 import { BaseResolvedKeybinding } from 'vs/platform/keybinding/common/baseResolvedKeybinding';
-import { SelectionBinding, ResolvedSelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 export interface IMacLinuxKeyMapping {
 	value: string;
@@ -964,9 +964,9 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		return null;
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
-		if (keybinding instanceof SelectionBinding) {
-			return [new ResolvedSelectionBinding(this._OS, keybinding)];
+	public resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[] {
+		if (keybinding instanceof MouseBinding) {
+			return [new ResolvedMouseBinding(this._OS, keybinding)];
 		}
 
 		let chordParts: ScanCodeBinding[][] = [];
@@ -1056,17 +1056,6 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		return new NativeResolvedKeybinding(this, this._OS, [keypress]);
 	}
 
-	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
-		const code = IMMUTABLE_KEY_CODE_TO_CODE[mouseEvent.keyCode];
-		const keypress = new ScanCodeBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, code);
-		return new NativeResolvedKeybinding(this, this._OS, [keypress]);
-	}
-
-	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
-		const binding = new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, MouseButtonUtils.fromKeyCode(mouseEvent.keyCode));
-		return new ResolvedSelectionBinding(this._OS, binding);
-	}
-
 	private _resolveSimpleUserBinding(binding: SimpleKeybinding | ScanCodeBinding | null): ScanCodeBinding[] {
 		if (!binding) {
 			return [];
@@ -1077,9 +1066,9 @@ export class MacLinuxKeyboardMapper implements IKeyboardMapper {
 		return this.simpleKeybindingToScanCodeBinding(binding);
 	}
 
-	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding): ResolvedKeybinding[] {
-		if (input instanceof SelectionBinding) {
-			return [new ResolvedSelectionBinding(this._OS, input)];
+	public resolveUserBinding(input: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding): ResolvedKeybinding[] {
+		if (input instanceof MouseBinding) {
+			return [new ResolvedMouseBinding(this._OS, input)];
 		}
 
 		const parts: ScanCodeBinding[][] = input.map(keybinding => this._resolveSimpleUserBinding(keybinding));

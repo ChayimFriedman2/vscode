@@ -25,6 +25,7 @@ import { ScrollType } from 'vs/editor/common/editorCommon';
 import { SearchWidget, SearchOptions } from 'vs/workbench/contrib/preferences/browser/preferencesWidgets';
 import { withNullAsUndefined } from 'vs/base/common/types';
 import { StandardMouseEvent, IMouseEvent } from 'vs/base/browser/mouseEvent';
+import { ResolvedMouseBinding, MouseBinding } from 'vs/base/common/mouseButtons';
 
 export interface KeybindingsSearchOptions extends SearchOptions {
 	recordEnter?: boolean;
@@ -37,10 +38,12 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	private _chordPart: ResolvedKeybinding | null;
 	private _inputValue: string;
 
-	/** When set to false, chord recording is not enabled. */
-	enableChord: boolean = true;
-	/** When set to true, keys are not recorded - only modifiers and mouse buttons. */
-	recordOnlyMouse: boolean = false;
+	/**
+	 * When set to true, keys are not recorded - only modifiers and mouse buttons. Also there are not chords.
+	 * When set to false, mouse buttons are not recorded.
+	 */
+	recordMouse: boolean = false;
+	isSelection: boolean = false;
 
 	private readonly recordDisposables = this._register(new DisposableStore());
 
@@ -106,6 +109,8 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	}
 
 	private _onMouseUp(mouseEvent: IMouseEvent): void {
+		if (!this.recordMouse) { return; }
+
 		mouseEvent.preventDefault();
 		mouseEvent.stopPropagation();
 		this.printMouseBinding(mouseEvent);
@@ -125,13 +130,13 @@ export class KeybindingsSearchWidget extends SearchWidget {
 			return;
 		}
 
-		if (this.recordOnlyMouse && !KeyCodeUtils.isModifierKey(keyboardEvent.keyCode)) { return; }
+		if (this.recordMouse && !KeyCodeUtils.isModifierKey(keyboardEvent.keyCode)) { return; }
 
 		this.printKeybinding(keyboardEvent);
 	}
 
 	private printMouseBinding(mouseEvent: IMouseEvent): void {
-		const keybinding = this.keybindingService.resolveMouseEvent(mouseEvent);
+		const keybinding = new ResolvedMouseBinding(OS, new MouseBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button, this.isSelection));
 		const info = `button: ${mouseEvent.browserEvent.button}, => UI: ${keybinding.getAriaLabel()}, user settings: ${keybinding.getUserSettingsLabel()}, dispatch: ${keybinding.getDispatchParts()[0]}`;
 		this.printBinding(keybinding, info);
 	}
@@ -167,7 +172,7 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	private printBinding(keybinding: ResolvedKeybinding, info: string): void {
 		const options = this.options as KeybindingsSearchOptions;
 		let value = '';
-		if (this.enableChord) {
+		if (!this.recordMouse) {
 			const hasFirstPart = (this._firstPart && this._firstPart.getDispatchParts()[0] !== null);
 			const hasChordPart = (this._chordPart && this._chordPart.getDispatchParts()[0] !== null);
 			if (hasFirstPart && hasChordPart) {
@@ -273,24 +278,10 @@ export class DefineKeybindingWidget extends Widget {
 		return this._domNode.domNode;
 	}
 
-	/** When set to false, chord recording is not enabled. */
-	public get enableChord(): boolean {
-		return this._keybindingInputWidget.enableChord;
-	}
-	public set enableChord(value: boolean) {
-		this._keybindingInputWidget.enableChord = value;
-	}
 
-	/** When set to true, keys are not recorded - only modifiers and mouse buttons. */
-	public get recordOnlyMouse(): boolean {
-		return this._keybindingInputWidget.recordOnlyMouse;
-	}
-	public set recordOnlyMouse(value: boolean) {
-		this._keybindingInputWidget.recordOnlyMouse = value;
-	}
-
-
-	define(): Promise<string | null> {
+	define(recordMouse: boolean = false, isSelection: boolean = false): Promise<string | null> {
+		this._keybindingInputWidget.recordMouse = recordMouse;
+		this._keybindingInputWidget.isSelection = isSelection;
 		this._keybindingInputWidget.clear();
 		return new Promise<string | null>((c) => {
 			if (!this._isVisible) {
@@ -305,6 +296,9 @@ export class DefineKeybindingWidget extends Widget {
 				this._keybindingInputWidget.focus();
 			}
 			const disposable = this._onHide.event(() => {
+				this._keybindingInputWidget.recordMouse = false;
+				this._keybindingInputWidget.isSelection = false;
+
 				c(this.getUserSettingsLabel());
 				disposable.dispose();
 			});

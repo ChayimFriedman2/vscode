@@ -511,17 +511,11 @@ export enum KeyCode {
 	KEY_IN_COMPOSITION = 109,
 	ABNT_C1 = 110,
 	ABNT_C2 = 111,
-	/** Left mouse button. */
-	MOUSE_LEFT = 112,
-	/** Middle mouse button. */
-	MOUSE_MIDDLE = 113,
-	/** Right mouse button. */
-	MOUSE_RIGHT = 114,
 	/**
 	 * Placed last to cover the length of the enum.
 	 * Please do not depend on this value!
 	 */
-	MAX_VALUE = 115
+	MAX_VALUE = 112
 }
 
 export enum MarkerSeverity {
@@ -542,6 +536,12 @@ export enum MarkerTag {
 export enum MinimapPosition {
 	Inline = 1,
 	Gutter = 2
+}
+
+export enum MouseButton {
+	Left = 0,
+	Middle = 1,
+	Right = 2
 }
 
 /**

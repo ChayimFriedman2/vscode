@@ -62,7 +62,7 @@ export class KeybindingDispatcher {
 	}
 
 	public has(keybinding: KeyCode): boolean {
-		let target = createKeybinding(keybinding, platform.OS);
+		let target = createKeybinding(keybinding, platform.OS) as Keybinding;
 		if (target !== null) {
 			for (const a of this._arr) {
 				if (target.equals(a.keybinding)) {
@@ -75,7 +75,7 @@ export class KeybindingDispatcher {
 
 	public set(keybinding: number, callback: IKeyBindingCallback) {
 		this._arr.push({
-			keybinding: createKeybinding(keybinding, platform.OS),
+			keybinding: createKeybinding(keybinding, platform.OS) as Keybinding,
 			callback: callback
 		});
 	}

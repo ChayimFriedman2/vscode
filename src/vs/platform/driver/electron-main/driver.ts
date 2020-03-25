@@ -9,7 +9,7 @@ import { serve as serveNet } from 'vs/base/parts/ipc/node/ipc.net';
 import { combinedDisposable, IDisposable } from 'vs/base/common/lifecycle';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { IPCServer, StaticRouter } from 'vs/base/parts/ipc/common/ipc';
-import { SimpleKeybinding, KeyCode, KeyCodeUtils } from 'vs/base/common/keyCodes';
+import { SimpleKeybinding, KeyCode } from 'vs/base/common/keyCodes';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
 import { OS } from 'vs/base/common/platform';
 import { Emitter, Event } from 'vs/base/common/event';
@@ -20,7 +20,7 @@ import { timeout } from 'vs/base/common/async';
 import { IDriver, IElement, IWindowDriver } from 'vs/platform/driver/common/driver';
 import { ILifecycleMainService } from 'vs/platform/lifecycle/electron-main/lifecycleMainService';
 import { IElectronMainService } from 'vs/platform/electron/electron-main/electronMainService';
-import { SelectionBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding } from 'vs/base/common/mouseButtons';
 
 function isSilentKeyCode(keyCode: KeyCode) {
 	return keyCode < KeyCode.KEY_0;
@@ -91,7 +91,7 @@ export class Driver implements IDriver, IWindowDriverRegistry {
 
 		const parts = KeybindingParser.parseUserBinding(keybinding);
 
-		if (parts instanceof SelectionBinding) {
+		if (parts instanceof MouseBinding) {
 			await this._dispatchKeybinding(windowId, parts);
 		} else {
 			for (let part of parts) {
@@ -100,15 +100,12 @@ export class Driver implements IDriver, IWindowDriverRegistry {
 		}
 	}
 
-	private async _dispatchKeybinding(windowId: number, keybinding: SimpleKeybinding | ScanCodeBinding | SelectionBinding): Promise<void> {
+	private async _dispatchKeybinding(windowId: number, keybinding: SimpleKeybinding | ScanCodeBinding | MouseBinding): Promise<void> {
 		if (keybinding instanceof ScanCodeBinding) {
 			throw new Error('ScanCodeBindings not supported');
 		}
-		if (keybinding instanceof SelectionBinding) {
-			throw new Error('SelectionBindings not supported');
-		}
-		if (KeyCodeUtils.isMouseButton(keybinding.keyCode)) {
-			throw new Error('Mouse buttons not supported');
+		if (keybinding instanceof MouseBinding) {
+			throw new Error('MouseBindings not supported');
 		}
 
 		const window = this.windowsMainService.getWindowById(windowId);

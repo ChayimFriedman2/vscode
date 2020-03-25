@@ -5,6 +5,7 @@
 
 import { OperatingSystem } from 'vs/base/common/platform';
 import { illegalArgument } from 'vs/base/common/errors';
+import { MouseBinding } from 'vs/base/common/mouseButtons';
 
 /**
  * Virtual Key Codes, the value does not hold any inherent meaning.
@@ -192,13 +193,6 @@ export const enum KeyCode {
 	ABNT_C1 = 110, // Brazilian (ABNT) Keyboard
 	ABNT_C2 = 111, // Brazilian (ABNT) Keyboard
 
-	/** Left mouse button. */
-	MOUSE_LEFT = 112,
-	/** Middle mouse button. */
-	MOUSE_MIDDLE = 113,
-	/** Right mouse button. */
-	MOUSE_RIGHT = 114,
-
 	/**
 	 * Placed last to cover the length of the enum.
 	 * Please do not depend on this value!
@@ -364,10 +358,6 @@ const userSettingsGeneralMap = new KeyCodeStrMap();
 	define(KeyCode.NUMPAD_DECIMAL, 'NumPad_Decimal');
 	define(KeyCode.NUMPAD_DIVIDE, 'NumPad_Divide');
 
-	define(KeyCode.MOUSE_LEFT, 'LMB');
-	define(KeyCode.MOUSE_MIDDLE, 'MMB');
-	define(KeyCode.MOUSE_RIGHT, 'RMB');
-
 })();
 
 export namespace KeyCodeUtils {
@@ -388,10 +378,6 @@ export namespace KeyCodeUtils {
 		return userSettingsUSMap.strToKeyCode(key) || userSettingsGeneralMap.strToKeyCode(key);
 	}
 
-	export function isMouseButton(key: KeyCode): boolean {
-		return KeyCode.MOUSE_LEFT <= key && key <= KeyCode.MOUSE_RIGHT;
-	}
-
 	export function isModifierKey(key: KeyCode): boolean {
 		return (
 			key === KeyCode.Unknown
@@ -408,15 +394,17 @@ export namespace KeyCodeUtils {
  * ```
  *    1111 11
  *    5432 1098 7654 3210
- *    ---- CSAW KKKK KKKK
+ *    --TT CSAW KKKK KKKK
+ *  T = bits 12-13 = type: 00 - key code, 01 - mouse, 10 - selection
  *  C = bit 11 = ctrlCmd flag
  *  S = bit 10 = shift flag
  *  A = bit 9 = alt flag
  *  W = bit 8 = winCtrl flag
- *  K = bits 0-7 = key code
+ *  K = bits 0-7 = key code/mouse button
  * ```
  */
 const enum BinaryKeybindingsMask {
+	Type = 0x00003000,
 	CtrlCmd = (1 << 11) >>> 0,
 	Shift = (1 << 10) >>> 0,
 	Alt = (1 << 9) >>> 0,
@@ -431,24 +419,44 @@ export const enum KeyMod {
 	WinCtrl = (1 << 8) >>> 0,
 }
 
+export const enum KeybindingType {
+	KeyCode = (0 << 12) >>> 0,
+	Mouse = (1 << 12) >>> 0,
+	Selection = (2 << 12) >>> 0
+}
+
 export function KeyChord(firstPart: number, secondPart: number): number {
 	const chordPart = ((secondPart & 0x0000FFFF) << 16) >>> 0;
 	return (firstPart | chordPart) >>> 0;
 }
 
-export function createKeybinding(keybinding: number, OS: OperatingSystem): Keybinding | null {
+export function createKeybinding(keybinding: number, OS: OperatingSystem): Keybinding | MouseBinding | null {
 	if (keybinding === 0) {
 		return null;
 	}
-	const firstPart = (keybinding & 0x0000FFFF) >>> 0;
-	const chordPart = (keybinding & 0xFFFF0000) >>> 16;
-	if (chordPart !== 0) {
-		return new ChordKeybinding([
-			createSimpleKeybinding(firstPart, OS),
-			createSimpleKeybinding(chordPart, OS)
-		]);
+	const type: KeybindingType = keybinding & BinaryKeybindingsMask.Type;
+	if (type === KeybindingType.KeyCode) {
+		const firstPart = (keybinding & 0x0000FFFF) >>> 0;
+		const chordPart = (keybinding & 0xFFFF0000) >>> 16;
+		if (chordPart !== 0) {
+			return new ChordKeybinding([
+				createSimpleKeybinding(firstPart, OS),
+				createSimpleKeybinding(chordPart, OS)
+			]);
+		}
+		return new ChordKeybinding([createSimpleKeybinding(firstPart, OS)]);
+	} else {
+		const ctrlCmd = (keybinding & BinaryKeybindingsMask.CtrlCmd ? true : false);
+		const winCtrl = (keybinding & BinaryKeybindingsMask.WinCtrl ? true : false);
+
+		const ctrlKey = (OS === OperatingSystem.Macintosh ? winCtrl : ctrlCmd);
+		const shiftKey = (keybinding & BinaryKeybindingsMask.Shift ? true : false);
+		const altKey = (keybinding & BinaryKeybindingsMask.Alt ? true : false);
+		const metaKey = (OS === OperatingSystem.Macintosh ? ctrlCmd : winCtrl);
+		const button = (keybinding & BinaryKeybindingsMask.KeyCode);
+
+		return new MouseBinding(ctrlKey, shiftKey, altKey, metaKey, button, type === KeybindingType.Selection);
 	}
-	return new ChordKeybinding([createSimpleKeybinding(firstPart, OS)]);
 }
 
 export function createSimpleKeybinding(keybinding: number, OS: OperatingSystem): SimpleKeybinding {

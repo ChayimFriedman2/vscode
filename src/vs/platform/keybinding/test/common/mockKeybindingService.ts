@@ -7,11 +7,11 @@ import { Event } from 'vs/base/common/event';
 import { Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OS } from 'vs/base/common/platform';
 import { IContextKey, IContextKeyChangeEvent, IContextKeyService, IContextKeyServiceTarget, ContextKeyExpression } from 'vs/platform/contextkey/common/contextkey';
-import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IEditorMouseEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 class MockKeybindingContextKey<T> implements IContextKey<T> {
 	private _defaultValue: T | undefined;
@@ -90,9 +90,9 @@ export class MockKeybindingService implements IKeybindingService {
 		return [];
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[] {
-		return keybinding instanceof SelectionBinding ?
-			[new ResolvedSelectionBinding(OS, keybinding)] :
+	public resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[] {
+		return keybinding instanceof MouseBinding ?
+			[new ResolvedMouseBinding(OS, keybinding)] :
 			[new USLayoutResolvedKeybinding(keybinding, OS)];
 	}
 
@@ -107,25 +107,16 @@ export class MockKeybindingService implements IKeybindingService {
 		return this.resolveKeybinding(keybinding.toChord())[0];
 	}
 
-	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
-		let keybinding = new SimpleKeybinding(
-			mouseEvent.ctrlKey,
-			mouseEvent.shiftKey,
-			mouseEvent.altKey,
-			mouseEvent.metaKey,
-			mouseEvent.keyCode
-		);
-		return this.resolveKeybinding(keybinding.toChord())[0];
-	}
-
-	public startSelection(mouseEvent: IMouseEvent, target: IContextKeyServiceTarget): boolean {
+	// TODO: Add tests for mouse bindings
+	onEditorMouseDown(mouseEvent: IMouseEvent): boolean {
 		return false;
 	}
-	public endSelection(): Thenable<void> {
-		throw new Error('Method not implemented.');
+	public completeSelection(): Promise<void> {
+		return Promise.resolve();
 	}
 	public cancelSelection(): void {
-		throw new Error('Method not implemented.');
+	}
+	public onEditorMouseUp(mouseEvent: IEditorMouseEvent): void {
 	}
 
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {

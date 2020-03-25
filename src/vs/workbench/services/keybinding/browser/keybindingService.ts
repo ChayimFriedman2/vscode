@@ -7,7 +7,6 @@ import * as nls from 'vs/nls';
 import * as browser from 'vs/base/browser/browser';
 import * as dom from 'vs/base/browser/dom';
 import { StandardKeyboardEvent } from 'vs/base/browser/keyboardEvent';
-import { StandardMouseEvent } from 'vs/base/browser/mouseEvent';
 import { Emitter, Event } from 'vs/base/common/event';
 import { IJSONSchema } from 'vs/base/common/jsonSchema';
 import { Keybinding, ResolvedKeybinding, KeyCode, KeyMod } from 'vs/base/common/keyCodes';
@@ -20,7 +19,7 @@ import { ContextKeyExpr, IContextKeyService, ContextKeyExpression } from 'vs/pla
 import { IEnvironmentService } from 'vs/platform/environment/common/environment';
 import { Extensions, IJSONContributionRegistry } from 'vs/platform/jsonschemas/common/jsonContributionRegistry';
 import { AbstractKeybindingService } from 'vs/platform/keybinding/common/abstractKeybindingService';
-import { IKeyboardEvent, IMouseEvent, IUserFriendlyKeybinding, KeybindingSource, IKeybindingService, IKeybindingEvent, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
+import { IKeyboardEvent, IUserFriendlyKeybinding, KeybindingSource, IKeybindingService, IKeybindingEvent, KeybindingsSchemaContribution } from 'vs/platform/keybinding/common/keybinding';
 import { KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { IKeybindingItem, IKeybindingRule2, KeybindingWeight, KeybindingsRegistry } from 'vs/platform/keybinding/common/keybindingsRegistry';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
@@ -48,7 +47,7 @@ import { INavigatorWithKeyboard, IKeyboard } from 'vs/workbench/services/keybind
 import { ScanCode, ScanCodeUtils, IMMUTABLE_CODE_TO_KEY_CODE } from 'vs/base/common/scanCode';
 import { flatten } from 'vs/base/common/arrays';
 import { BrowserFeatures, KeyboardSupport } from 'vs/base/browser/canIUse';
-import { SelectionBinding, ResolvedSelectionBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding } from 'vs/base/common/mouseButtons';
 
 interface ContributedKeyBinding {
 	command: string;
@@ -253,14 +252,6 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 			}
 		}));
 
-		this._register(dom.addDisposableListener(window, dom.EventType.MOUSE_UP, (e: MouseEvent) => {
-			let mouseEvent = new StandardMouseEvent(e);
-			let shouldPreventDefault = this._dispatchMouse(mouseEvent, mouseEvent.target);
-			if (shouldPreventDefault) {
-				mouseEvent.preventDefault();
-			}
-		}));
-
 		let data = this.keymapService.getCurrentKeyboardLayout();
 		/* __GDPR__FRAGMENT__
 			"IKeyboardLayoutInfo" : {
@@ -393,7 +384,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		for (const item of items) {
 			const when = item.when || undefined;
 			const parts = item.parts;
-			if (!(parts instanceof SelectionBinding) && parts.length === 0) {
+			if (!(parts instanceof MouseBinding) && parts.length === 0) {
 				// This might be a removal keybinding item in user settings => accept it
 				result[resultLen++] = new ResolvedKeybindingItem(undefined, item.command, item.commandArgs, when, isDefault);
 			} else {
@@ -407,7 +398,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		return result;
 	}
 
-	private _assertBrowserConflicts(kb: Keybinding | SelectionBinding, commandId: string): boolean {
+	private _assertBrowserConflicts(kb: Keybinding | MouseBinding, commandId: string): boolean {
 		if (BrowserFeatures.keyboard === KeyboardSupport.Always) {
 			return false;
 		}
@@ -416,7 +407,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 			return false;
 		}
 
-		if (kb instanceof SelectionBinding) {
+		if (kb instanceof MouseBinding) {
 			return false;
 		}
 
@@ -478,23 +469,13 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		return false;
 	}
 
-	public resolveKeybinding(kb: Keybinding | SelectionBinding): ResolvedKeybinding[] {
+	public resolveKeybinding(kb: Keybinding | MouseBinding): ResolvedKeybinding[] {
 		return this._keyboardMapper.resolveKeybinding(kb);
 	}
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
 		this.keymapService.validateCurrentKeyboardMapping(keyboardEvent);
 		return this._keyboardMapper.resolveKeyboardEvent(keyboardEvent);
-	}
-
-	public resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding {
-		// this.keymapService.validateCurrentKeyboardMapping(mouseEvent);
-		return this._keyboardMapper.resolveMouseEvent(mouseEvent);
-	}
-
-	public resolveSelectionEvent(mouseEvent: IMouseEvent): ResolvedSelectionBinding {
-		// this.keymapService.validateCurrentKeyboardMapping(mouseEvent);
-		return this._keyboardMapper.resolveSelectionEvent(mouseEvent);
 	}
 
 	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {

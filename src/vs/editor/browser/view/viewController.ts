@@ -187,7 +187,7 @@ export class ViewController {
 					} else {
 						// Do multi-cursor operations only when purely alt is pressed
 						if (data.inSelectionMode) {
-							this._lastCursorMoveToSelect(data.position);
+							this.lastCursorMoveToSelect(data.position);
 						} else {
 							this._createCursor(data.position, false);
 						}
@@ -246,7 +246,7 @@ export class ViewController {
 		});
 	}
 
-	private _lastCursorMoveToSelect(viewPosition: Position): void {
+	public lastCursorMoveToSelect(viewPosition: Position): void {
 		this._execMouseCommand(CoreNavigationCommands.LastCursorMoveToSelect, this._usualArgs(viewPosition));
 	}
 

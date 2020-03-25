@@ -6,7 +6,7 @@
 import { ChordKeybinding, KeyCodeUtils, Keybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
 import { OperatingSystem } from 'vs/base/common/platform';
 import { ScanCodeBinding, ScanCodeUtils } from 'vs/base/common/scanCode';
-import { UserSettingsSelectionPrefix, SelectionBinding, MouseButtonUtils } from 'vs/base/common/mouseButtons';
+import { UserSettingsSelectionPrefix, MouseBinding, MouseButtonUtils, UserSettingsMousePrefix } from 'vs/base/common/mouseButtons';
 
 export class KeybindingParser {
 
@@ -75,11 +75,18 @@ export class KeybindingParser {
 		};
 	}
 
-	private static parseSelectionBinding(input: string): SelectionBinding {
+	private static parseSelectionBinding(input: string): MouseBinding {
 		input = input.substr(UserSettingsSelectionPrefix.length).trimRight();
 		const mods = this._readModifiers(input);
 		const mouseButton = MouseButtonUtils.fromUserSettingsString(mods.key);
-		return new SelectionBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton);
+		return new MouseBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton, true);
+	}
+
+	private static parseMouseBinding(input: string): MouseBinding {
+		input = input.substr(UserSettingsSelectionPrefix.length).trimRight();
+		const mods = this._readModifiers(input);
+		const mouseButton = MouseButtonUtils.fromUserSettingsString(mods.key);
+		return new MouseBinding(mods.ctrl, mods.shift, mods.alt, mods.meta, mouseButton, false);
 	}
 
 	private static parseSimpleKeybinding(input: string): [SimpleKeybinding, string] {
@@ -88,7 +95,7 @@ export class KeybindingParser {
 		return [new SimpleKeybinding(mods.ctrl, mods.shift, mods.alt, mods.meta, keyCode), mods.remains];
 	}
 
-	public static parseKeybinding(input: string, OS: OperatingSystem): Keybinding | SelectionBinding | null {
+	public static parseKeybinding(input: string, OS: OperatingSystem): Keybinding | MouseBinding | null {
 		if (!input) {
 			return null;
 		}
@@ -97,6 +104,9 @@ export class KeybindingParser {
 
 		if (input.startsWith(UserSettingsSelectionPrefix)) {
 			return this.parseSelectionBinding(input);
+		}
+		if (input.startsWith(UserSettingsMousePrefix)) {
+			return this.parseMouseBinding(input);
 		}
 
 		const parts: SimpleKeybinding[] = [];
@@ -121,7 +131,7 @@ export class KeybindingParser {
 		return [new SimpleKeybinding(mods.ctrl, mods.shift, mods.alt, mods.meta, keyCode), mods.remains];
 	}
 
-	static parseUserBinding(input: string): (SimpleKeybinding | ScanCodeBinding)[] | SelectionBinding {
+	static parseUserBinding(input: string): (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding {
 		if (!input) {
 			return [];
 		}
@@ -130,6 +140,9 @@ export class KeybindingParser {
 
 		if (input.startsWith(UserSettingsSelectionPrefix)) {
 			return this.parseSelectionBinding(input);
+		}
+		if (input.startsWith(UserSettingsMousePrefix)) {
+			return this.parseMouseBinding(input);
 		}
 
 		const parts: (SimpleKeybinding | ScanCodeBinding)[] = [];

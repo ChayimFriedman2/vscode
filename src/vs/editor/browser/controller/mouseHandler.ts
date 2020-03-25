@@ -229,10 +229,10 @@ export class MouseHandler extends ViewEventHandler {
 		};
 
 		if (targetIsContent || (targetIsLineNumbers && selectOnLineNumbers)) {
-			if (this.keybindingService.startSelection(e, e.target)) {
+			if (this.keybindingService.onEditorMouseDown(e)) {
 				focus();
 				this._mouseDownOperation.startSelection(t.type, e,
-					() => this.keybindingService.cancelSelection(), () => this.keybindingService.endSelection());
+					() => this.keybindingService.cancelSelection(), () => this.keybindingService.completeSelection());
 			} else if (shouldHandle) {
 				focus();
 				this._mouseDownOperation.start(t.type, e);

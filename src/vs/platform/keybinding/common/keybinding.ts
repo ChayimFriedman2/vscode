@@ -10,7 +10,7 @@ import { IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextk
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { SelectionBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, MouseButton } from 'vs/base/common/mouseButtons';
 
 export interface IUserFriendlyKeybinding {
 	key: string;
@@ -45,7 +45,8 @@ export interface IMouseEvent {
 	readonly shiftKey: boolean;
 	readonly altKey: boolean;
 	readonly metaKey: boolean;
-	readonly keyCode: KeyCode;
+	readonly button: MouseButton;
+	readonly target: IContextKeyServiceTarget;
 }
 
 export interface KeybindingsSchemaContribution {
@@ -55,6 +56,10 @@ export interface KeybindingsSchemaContribution {
 }
 
 export const IKeybindingService = createDecorator<IKeybindingService>('keybindingService');
+
+export interface IEditorMouseEvent extends IMouseEvent {
+	position: { lineNumber: number; column: number; };
+}
 
 export interface IKeybindingService {
 	_serviceBrand: undefined;
@@ -66,28 +71,31 @@ export interface IKeybindingService {
 	/**
 	 * Returns none, one or many (depending on keyboard layout)!
 	 */
-	resolveKeybinding(keybinding: Keybinding | SelectionBinding): ResolvedKeybinding[];
+	resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[];
 
 	/**
-	 * Starts a selection shortcut if found one.
-	 * @param mouseEvent The mouse down event started the selection.
-	 * @returns true if found a shortcut that matches the event.
+	 * @returns true if a selection shortcut was reached. In that case, either completeSelection() or cancelSelection() should be called after.
 	 */
-	startSelection(mouseEvent: IMouseEvent, target: IContextKeyServiceTarget): boolean;
+	onEditorMouseDown(mouseEvent: IMouseEvent): boolean;
+
 	/**
-	 * Ends the current selection and executes the bound command.
-	 * Should be called while the text is selected in the editor.
-	 * @returns Promise that will fulfilled when the command execution was finished, either successfully or with failure.
+	 * Finishes the selection shortcut and executes the bound command.
+	 * @returns Promise that will be resolved when the command execution is done.
 	 */
-	endSelection(): Thenable<void>;
+	completeSelection(): Promise<void>;
+
 	/**
-	 * Ends the current selection without executing the bound command.
+	 * Finishes the selection shortcut without executing the bound command.
+	 * Called for example when a key was pressed while selecting.
 	 */
 	cancelSelection(): void;
 
-	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
+	/**
+	 * Called in mouseup event if the event did not finish a selection - i.e. no selection, just mouse up.
+	 */
+	onEditorMouseUp(mouseEvent: IEditorMouseEvent): void;
 
-	resolveMouseEvent(mouseEvent: IMouseEvent): ResolvedKeybinding;
+	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 
 	resolveUserBinding(userBinding: string): ResolvedKeybinding[];
 

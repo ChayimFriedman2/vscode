@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResolvedKeybinding, ResolvedKeybindingPart } from 'vs/base/common/keyCodes';
-import { OperatingSystem } from 'vs/base/common/platform';
+import { OperatingSystem, OS } from 'vs/base/common/platform';
 import { UILabelProvider, AriaLabelProvider, UserSettingsLabelProvider } from 'vs/base/common/keybindingLabels';
 
 export const enum MouseButton {
@@ -12,18 +12,6 @@ export const enum MouseButton {
 	Middle,
 	Right
 }
-
-/**
- * The prefix used in keybindings.json for selection bindings in order to distinguish them from regular bindings.
- */
-export const UserSettingsSelectionPrefix: string = 'sel ';
-export const UiSelectionPrefix: string = 'SEL ';
-const AriaSelectionPrefix: string = 'SEL ';
-
-/**
- * The prefix used in keybindings.json for mouse bindings in order to distinguish them from regular bindings.
- */
-export const UserSettingsMousePrefix: string = 'mouse ';
 
 const uiStrToButton: { [key: string]: MouseButton } = { 'LMB': MouseButton.Left, 'MMB': MouseButton.Middle, 'RMB': MouseButton.Right };
 const uiButtonToStr = ['LMB', 'MMB', 'RMB'];
@@ -57,77 +45,117 @@ export namespace MouseButtonUtils {
 	}
 }
 
-export class MouseBinding {
+abstract class BaseMouseBinding {
+
 	public readonly ctrlKey: boolean;
 	public readonly shiftKey: boolean;
 	public readonly altKey: boolean;
 	public readonly metaKey: boolean;
 	public readonly button: MouseButton;
-	public readonly isSelectionBinding: boolean;
-	/**
-	 * One is single click, two is double click, etc..
-	 */
-	public readonly times: number;
 
-	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton, isSelectionBinding: boolean, times: number) {
+	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton) {
 		this.ctrlKey = ctrlKey;
 		this.shiftKey = shiftKey;
 		this.altKey = altKey;
 		this.metaKey = metaKey;
 		this.button = button;
-		this.isSelectionBinding = isSelectionBinding;
-		this.times = times;
 	}
 
-	public equals(other: MouseBinding): boolean {
+	protected equals(other: BaseMouseBinding): boolean {
 		return (
 			this.ctrlKey === other.ctrlKey
 			&& this.shiftKey === other.shiftKey
 			&& this.altKey === other.altKey
 			&& this.metaKey === other.metaKey
 			&& this.button === other.button
-			&& this.isSelectionBinding === other.isSelectionBinding
-			&& this.times === other.times
 		);
 	}
 
-	public getHashCode(): string {
+	protected getHashCode(): string {
 		const ctrl = this.ctrlKey ? '1' : '0';
 		const shift = this.shiftKey ? '1' : '0';
 		const alt = this.altKey ? '1' : '0';
 		const meta = this.metaKey ? '1' : '0';
-		const type = this.isSelectionBinding ? 's' : 'm';
-		return `${type}${this.times};${ctrl}${shift}${alt}${meta}${this.button}`;
+		return `${ctrl}${shift}${alt}${meta}${this.button}`;
+	}
+
+	protected getBaseLabel(): string | null {
+		return UILabelProvider.toLabel(OS, [this], () => MouseButtonUtils.toString(this.button));
+	}
+
+	protected getBaseAriaLabel(): string | null {
+		return AriaLabelProvider.toLabel(OS, [this], () => MouseButtonUtils.toAriaString(this.button));
+	}
+
+	abstract getLabel(): string | null;
+	abstract getAriaLabel(): string | null;
+}
+
+export class MouseBinding extends BaseMouseBinding {
+
+	/**
+	 * One is single click, two is double click, etc..
+	 */
+	public readonly times: number;
+
+	constructor(ctrlKey: boolean, shiftKey: boolean, altKey: boolean, metaKey: boolean, button: MouseButton, times: number) {
+		super(ctrlKey, shiftKey, altKey, metaKey, button);
+		this.times = times;
+	}
+
+	protected equals(other: MouseBinding): boolean {
+		return super.equals(other) && this.times === other.times;
+	}
+
+	getHashCode(): string {
+		return `${this.times}m` + super.getHashCode();
+	}
+
+	getLabel(): string | null {
+		return this.getBaseAriaLabel();
+	}
+
+	getAriaLabel(): string | null {
+		return this.getBaseAriaLabel();
+	}
+}
+
+export class SelectionBinding extends BaseMouseBinding {
+
+	equals(other: MouseBinding): boolean {
+		return super.equals(other);
+	}
+
+	getHashCode(): string {
+		return 's' + super.getHashCode();
+	}
+
+	getLabel(): string | null {
+		const result = this.getBaseAriaLabel();
+		return result && `SEL ${result}`;
+	}
+
+	getAriaLabel(): string | null {
+		const result = this.getBaseAriaLabel();
+		return result && `Selection Shortcut: ${result}`;
 	}
 }
 
 export class ResolvedMouseBinding extends ResolvedKeybinding {
 
-	private readonly _os: OperatingSystem;
 	private readonly _binding: MouseBinding;
 
-	constructor(os: OperatingSystem, binding: MouseBinding) {
+	constructor(binding: MouseBinding) {
 		super();
-		this._os = os;
 		this._binding = binding;
 	}
 
-	private get uiPrefix() {
-		return this._binding.isSelectionBinding ? UiSelectionPrefix : '';
-	}
-	private get userSettingsPrefix() {
-		return this._binding.isSelectionBinding ? UserSettingsSelectionPrefix : UserSettingsMousePrefix;
-	}
-	private get ariaPrefix() {
-		return this._binding.isSelectionBinding ? AriaSelectionPrefix : '';
-	}
-
 	public getLabel(): string | null {
-		return this.uiPrefix + UILabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toString(binding.button));
+		return this._binding.getLabel();
 	}
 
 	public getAriaLabel(): string | null {
-		return this.ariaPrefix + AriaLabelProvider.toLabel(this._os, [this._binding], (binding) => MouseButtonUtils.toAriaString(binding.button));
+		return this._binding.getAriaLabel();
 	}
 
 	public getElectronAccelerator(): string | null {
@@ -140,7 +168,7 @@ export class ResolvedMouseBinding extends ResolvedKeybinding {
 	}
 
 	public isWYSIWYG(): boolean {
-		return this.userSettingsPrefix === this.uiPrefix;
+		return false;
 	}
 
 	public isChord(): boolean {
@@ -155,7 +183,7 @@ export class ResolvedMouseBinding extends ResolvedKeybinding {
 			this._binding.metaKey,
 			MouseButtonUtils.toString(this._binding.button),
 			MouseButtonUtils.toAriaString(this._binding.button),
-			this._binding.isSelectionBinding
+			this._binding instanceof SelectionBinding
 		)];
 	}
 

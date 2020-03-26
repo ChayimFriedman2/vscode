@@ -10,7 +10,7 @@ import { Disposable, toDisposable, DisposableStore } from 'vs/base/common/lifecy
 import { Event, Emitter } from 'vs/base/common/event';
 import { KeybindingLabel } from 'vs/base/browser/ui/keybindingLabel/keybindingLabel';
 import { Widget } from 'vs/base/browser/ui/widget';
-import { ResolvedKeybinding, KeyCode, KeyCodeUtils } from 'vs/base/common/keyCodes';
+import { ResolvedKeybinding, KeyCode, KeyCodeUtils, JSONKeysUtils, JSONKey, IMouseJSONKey, ISelectionJSONKey } from 'vs/base/common/keyCodes';
 import * as dom from 'vs/base/browser/dom';
 import { IKeyboardEvent, StandardKeyboardEvent } from 'vs/base/browser/keyboardEvent';
 import { FastDomNode, createFastDomNode } from 'vs/base/browser/fastDomNode';
@@ -25,7 +25,7 @@ import { ScrollType } from 'vs/editor/common/editorCommon';
 import { SearchWidget, SearchOptions } from 'vs/workbench/contrib/preferences/browser/preferencesWidgets';
 import { withNullAsUndefined } from 'vs/base/common/types';
 import { StandardMouseEvent, IMouseEvent } from 'vs/base/browser/mouseEvent';
-import { ResolvedMouseBinding, MouseBinding } from 'vs/base/common/mouseButtons';
+import { ResolvedMouseBinding, MouseBinding, SelectionBinding } from 'vs/base/common/mouseButtons';
 
 export interface KeybindingsSearchOptions extends SearchOptions {
 	recordEnter?: boolean;
@@ -136,7 +136,9 @@ export class KeybindingsSearchWidget extends SearchWidget {
 	}
 
 	private printMouseBinding(mouseEvent: IMouseEvent): void {
-		const keybinding = new ResolvedMouseBinding(OS, new MouseBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button, this.isSelection));
+		const keybinding = new ResolvedMouseBinding(this.isSelection
+			? new MouseBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button)
+			: new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button));
 		const info = `button: ${mouseEvent.browserEvent.button}, => UI: ${keybinding.getAriaLabel()}, user settings: ${keybinding.getUserSettingsLabel()}, dispatch: ${keybinding.getDispatchParts()[0]}`;
 		this.printBinding(keybinding, info);
 	}
@@ -187,14 +189,14 @@ export class KeybindingsSearchWidget extends SearchWidget {
 				this._chordPart = keybinding;
 			}
 			if (this._firstPart) {
-				value = (this._firstPart.getUserSettingsLabel() || '');
+				value = JSONKeysUtils.toString(this._firstPart.getUserSettingsLabel() || '');
 			}
 			if (this._chordPart) {
 				value = value + ' ' + this._chordPart.getUserSettingsLabel();
 			}
 		} else {
 			this._firstPart = keybinding;
-			value = this._firstPart.getUserSettingsLabel() || '';
+			value = JSONKeysUtils.toString(this._firstPart.getUserSettingsLabel() || '');
 		}
 		this.setInputValue(options.quoteRecordedKeys ? `"${value}"` : value);
 		this.inputBox.inputElement.title = info;
@@ -218,11 +220,11 @@ export class DefineKeybindingWidget extends Widget {
 
 	private _onHide = this._register(new Emitter<void>());
 
-	private _onDidChange = this._register(new Emitter<string>());
-	onDidChange: Event<string> = this._onDidChange.event;
+	private _onDidChange = this._register(new Emitter<JSONKey>());
+	onDidChange: Event<JSONKey> = this._onDidChange.event;
 
-	private _onShowExistingKeybindings = this._register(new Emitter<string | null>());
-	readonly onShowExistingKeybidings: Event<string | null> = this._onShowExistingKeybindings.event;
+	private _onShowExistingKeybindings = this._register(new Emitter<JSONKey | null>());
+	readonly onShowExistingKeybidings: Event<JSONKey | null> = this._onShowExistingKeybindings.event;
 
 	constructor(
 		parent: HTMLElement | null,
@@ -279,11 +281,14 @@ export class DefineKeybindingWidget extends Widget {
 	}
 
 
-	define(recordMouse: boolean = false, isSelection: boolean = false): Promise<string | null> {
+	define(recordMouse?: false, isSelection?: false): Promise<string | null>;
+	define(recordMouse: true, isSelection?: false): Promise<IMouseJSONKey | null>;
+	define(recordMouse: true, isSelection: true): Promise<ISelectionJSONKey | null>;
+	define(recordMouse: boolean = false, isSelection: boolean = false): Promise<JSONKey | null> {
 		this._keybindingInputWidget.recordMouse = recordMouse;
 		this._keybindingInputWidget.isSelection = isSelection;
 		this._keybindingInputWidget.clear();
-		return new Promise<string | null>((c) => {
+		return new Promise<JSONKey | null>((c) => {
 			if (!this._isVisible) {
 				this._isVisible = true;
 				this._domNode.setDisplay('block');
@@ -342,8 +347,8 @@ export class DefineKeybindingWidget extends Widget {
 		}
 	}
 
-	private getUserSettingsLabel(): string | null {
-		let label: string | null = null;
+	private getUserSettingsLabel(): JSONKey | null {
+		let label: JSONKey | null = null;
 		if (this._firstPart) {
 			label = this._firstPart.getUserSettingsLabel();
 			if (this._chordPart) {

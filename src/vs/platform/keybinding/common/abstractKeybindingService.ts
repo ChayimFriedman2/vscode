@@ -7,18 +7,17 @@ import * as nls from 'vs/nls';
 import * as arrays from 'vs/base/common/arrays';
 import { IntervalTimer } from 'vs/base/common/async';
 import { Emitter, Event } from 'vs/base/common/event';
-import { KeyCode, Keybinding, ResolvedKeybinding } from 'vs/base/common/keyCodes';
+import { KeyCode, Keybinding, ResolvedKeybinding, JSONKey } from 'vs/base/common/keyCodes';
 import { Disposable, IDisposable } from 'vs/base/common/lifecycle';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { IContextKeyService, IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextkey';
-import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution, IEditorMouseEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution, IEditorMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IResolveResult, KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from 'vs/base/common/actions';
-import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
-import { OS } from 'vs/base/common/platform';
+import { MouseBinding, ResolvedMouseBinding, SelectionBinding } from 'vs/base/common/mouseButtons';
 
 interface CurrentChord {
 	keypress: string;
@@ -66,9 +65,9 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	protected abstract _getResolver(): KeybindingResolver;
 	protected abstract _documentHasFocus(): boolean;
-	public abstract resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[];
+	public abstract resolveKeybinding(keybinding: Keybinding | MouseBinding | SelectionBinding): ResolvedKeybinding[];
 	public abstract resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
-	public abstract resolveUserBinding(userBinding: string): ResolvedKeybinding[];
+	public abstract resolveUserBinding(userBinding: JSONKey): ResolvedKeybinding[];
 	public abstract registerSchemaContribution(contribution: KeybindingsSchemaContribution): void;
 	public abstract _dumpDebugInfo(): string;
 	public abstract _dumpDebugInfoJSON(): string;
@@ -163,12 +162,8 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		}
 	}
 
-	private _createMouseBinding(e: IMouseEvent, isSelection: boolean): MouseBinding {
-		return new MouseBinding(e.ctrlKey, e.shiftKey, e.altKey, e.metaKey, e.button, isSelection);
-	}
-
 	public onEditorMouseDown(mouseEvent: IEditorMouseEvent): boolean {
-		const resolvedBinding = new ResolvedMouseBinding(OS, this._createMouseBinding(mouseEvent, true));
+		const resolvedBinding = new ResolvedMouseBinding(new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button));
 		this._selectionCommand = this._getCommand(resolvedBinding, mouseEvent.target);
 		return this._selectionCommand !== null;
 	}
@@ -184,7 +179,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 	}
 
 	public onEditorMouseUp(mouseEvent: IEditorMouseEvent): void {
-		const resolvedBinding = new ResolvedMouseBinding(OS, this._createMouseBinding(mouseEvent, false));
+		const resolvedBinding = new ResolvedMouseBinding(new MouseBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button, mouseEvent.times));
 		const command = this._getCommand(resolvedBinding, mouseEvent.target);
 		if (command) {
 			// Use Object.create() instead of object literal so user has no access to Object's method

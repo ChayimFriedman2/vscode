@@ -9,7 +9,7 @@ import * as strings from 'vs/base/common/strings';
 import { OperatingSystem, Language } from 'vs/base/common/platform';
 import { IMatch, IFilter, or, matchesContiguousSubString, matchesPrefix, matchesCamelCase, matchesWords } from 'vs/base/common/filters';
 import { Registry } from 'vs/platform/registry/common/platform';
-import { ResolvedKeybinding, ResolvedKeybindingPart } from 'vs/base/common/keyCodes';
+import { ResolvedKeybinding, ResolvedKeybindingPart, JSONKeysUtils } from 'vs/base/common/keyCodes';
 import { AriaLabelProvider, UserSettingsLabelProvider, UILabelProvider, ModifierLabels as ModLabels } from 'vs/base/common/keybindingLabels';
 import { MenuRegistry, ILocalizedString, ICommandAction } from 'vs/platform/actions/common/actions';
 import { IWorkbenchActionRegistry, Extensions as ActionExtensions } from 'vs/workbench/common/actions';
@@ -306,7 +306,7 @@ class KeybindingItemMatches {
 		const userSettingsLabel = keybinding.getUserSettingsLabel();
 		const ariaLabel = keybinding.getAriaLabel();
 		const label = keybinding.getLabel();
-		if ((userSettingsLabel && strings.compareIgnoreCase(searchValue, userSettingsLabel) === 0)
+		if ((userSettingsLabel && strings.compareIgnoreCase(searchValue, JSONKeysUtils.toUIString(userSettingsLabel)) === 0)
 			|| (ariaLabel && strings.compareIgnoreCase(searchValue, ariaLabel) === 0)
 			|| (label && strings.compareIgnoreCase(searchValue, label) === 0)) {
 			return {

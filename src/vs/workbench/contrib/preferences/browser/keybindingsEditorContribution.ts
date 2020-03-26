@@ -33,7 +33,7 @@ import { equals } from 'vs/base/common/arrays';
 import { assertIsDefined } from 'vs/base/common/types';
 import { IEnvironmentService } from 'vs/platform/environment/common/environment';
 import { isEqual } from 'vs/base/common/resources';
-import { MouseBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, SelectionBinding } from 'vs/base/common/mouseButtons';
 
 const NLS_LAUNCH_MESSAGE = nls.localize('defineKeybinding.start', "Define Keybinding");
 const NLS_KB_LAYOUT_ERROR_MESSAGE = nls.localize('defineKeybinding.kbLayoutErrorMessage', "You won't be able to produce this key combination under your current keyboard layout.");
@@ -267,6 +267,9 @@ export class KeybindingEditorDecorationsRenderer extends Disposable {
 		const bParts = KeybindingParser.parseUserBinding(b);
 		if (aParts instanceof MouseBinding || bParts instanceof MouseBinding) {
 			return aParts instanceof MouseBinding && bParts instanceof MouseBinding && aParts.equals(bParts);
+		}
+		if (aParts instanceof SelectionBinding || bParts instanceof SelectionBinding) {
+			return aParts instanceof SelectionBinding && bParts instanceof SelectionBinding && aParts.equals(bParts);
 		}
 		return equals(aParts, bParts, (a, b) => this._userBindingEquals(a, b));
 	}

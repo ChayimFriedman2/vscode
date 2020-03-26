@@ -508,7 +508,7 @@ export namespace JSONKeysUtils {
 			&& ((a as IMouseJSONKey).times || 1) === ((b as IMouseJSONKey).times || 1);
 	}
 
-	export function toString(key: JSONKey) {
+	export function toString(key: JSONKey): string {
 		if (isString(key)) {
 			return key; // Keep backward-compatibility with keyboard bindings
 		}
@@ -518,6 +518,17 @@ export namespace JSONKeysUtils {
 			key.times = 1;
 		}
 		return JSON.stringify(key);
+	}
+
+	/**
+	 * Converts key from JSON format to UI format, which includes only the button + modifiers (e.g. ctrl+lmb).
+	 */
+	export function toUIString(key: JSONKey): string {
+		return isString(key) ? key : key.button;
+	}
+
+	export function isJSONKey(key: any): key is JSONKey {
+		return isString(key) || key.type === 'mouse' || key.type === 'selection';
 	}
 }
 

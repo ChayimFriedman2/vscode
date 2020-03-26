@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import * as path from 'vs/base/common/path';
 import { getPathFromAmdModule } from 'vs/base/common/amd';
-import { Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
+import { Keybinding, ResolvedKeybinding, SimpleKeybinding, JSONKey } from 'vs/base/common/keyCodes';
 import { ScanCodeBinding } from 'vs/base/common/scanCode';
 import { readFile, writeFile } from 'vs/base/node/pfs';
 import { IKeyboardEvent } from 'vs/platform/keybinding/common/keybinding';
@@ -16,7 +16,7 @@ export interface IResolvedKeybinding {
 	label: string | null;
 	ariaLabel: string | null;
 	electronAccelerator: string | null;
-	userSettingsLabel: string | null;
+	userSettingsLabel: JSONKey | null;
 	isWYSIWYG: boolean;
 	isChord: boolean;
 	dispatchParts: (string | null)[];

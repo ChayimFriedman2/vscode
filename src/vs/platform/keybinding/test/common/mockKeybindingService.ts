@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Event } from 'vs/base/common/event';
-import { Keybinding, ResolvedKeybinding, SimpleKeybinding } from 'vs/base/common/keyCodes';
+import { Keybinding, ResolvedKeybinding, SimpleKeybinding, JSONKey } from 'vs/base/common/keyCodes';
 import { OS } from 'vs/base/common/platform';
 import { IContextKey, IContextKeyChangeEvent, IContextKeyService, IContextKeyServiceTarget, ContextKeyExpression } from 'vs/platform/contextkey/common/contextkey';
 import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IEditorMouseEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
-import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding, SelectionBinding, BaseMouseBinding } from 'vs/base/common/mouseButtons';
 
 class MockKeybindingContextKey<T> implements IContextKey<T> {
 	private _defaultValue: T | undefined;
@@ -90,10 +90,8 @@ export class MockKeybindingService implements IKeybindingService {
 		return [];
 	}
 
-	public resolveKeybinding(keybinding: Keybinding): ResolvedKeybinding[] {
-		return keybinding instanceof MouseBinding ?
-			[new ResolvedMouseBinding(OS, keybinding)] :
-			[new USLayoutResolvedKeybinding(keybinding, OS)];
+	public resolveKeybinding(keybinding: Keybinding | MouseBinding | SelectionBinding): ResolvedKeybinding[] {
+		return keybinding instanceof BaseMouseBinding ? [new ResolvedMouseBinding(keybinding)] : [new USLayoutResolvedKeybinding(keybinding, OS)];
 	}
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
@@ -119,7 +117,7 @@ export class MockKeybindingService implements IKeybindingService {
 	public onEditorMouseUp(mouseEvent: IEditorMouseEvent): void {
 	}
 
-	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {
+	public resolveUserBinding(userBinding: JSONKey): ResolvedKeybinding[] {
 		return [];
 	}
 

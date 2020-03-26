@@ -212,11 +212,11 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		this.showOverlayContainer();
 		return this.defineKeybindingWidget.define(true).then(button => {
 			if (button) {
-				if (button === 'lmb' || button === 'rmb') {
+				if (button.button === 'lmb' || button.button === 'rmb') {
 					return Promise.reject(new Error(localize('cannotBindLmbRmbWithoutModifiers', "Can't use left or right mouse buttons in a shortcut without modifiers.")));
 				}
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_MOUSE, keybindingEntry.keybindingItem.command, button);
-				return this.updateKeybinding(keybindingEntry, { type: 'mouse', button }, keybindingEntry.keybindingItem.when);
+				return this.updateKeybinding(keybindingEntry, button, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {
@@ -235,11 +235,11 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		this.showOverlayContainer();
 		return this.defineKeybindingWidget.define(true, true).then(button => {
 			if (button) {
-				if (button === 'lmb' || button === 'rmb' || button === 'mmb') {
+				if (button.button === 'lmb' || button.button === 'rmb' || button.button === 'mmb') {
 					return Promise.reject(new Error(localize('cannotBindLmbMmbRmbWithoutModifiers', "Can't use left, middle or right mouse buttons in a selection shortcut without modifiers.")));
 				}
 				this.reportKeybindingAction(KEYBINDINGS_EDITOR_COMMAND_DEFINE_SELECTION, keybindingEntry.keybindingItem.command, button);
-				return this.updateKeybinding(keybindingEntry, { type: 'selection', button }, keybindingEntry.keybindingItem.when);
+				return this.updateKeybinding(keybindingEntry, button, keybindingEntry.keybindingItem.when);
 			}
 			return null;
 		}).then(() => {
@@ -831,9 +831,9 @@ export class KeybindingsEditor extends BaseEditor implements IKeybindingsEditorP
 		return this.latestEmptyFilters.filter(filterText => (cumulativeSize += filterText.length) <= 8192);
 	}
 
-	private reportKeybindingAction(action: string, command: string, keybinding: ResolvedKeybinding | string): void {
+	private reportKeybindingAction(action: string, command: string, keybinding: ResolvedKeybinding | JSONKey): void {
 		// __GDPR__TODO__ Need to move off dynamic event names and properties as they cannot be registered statically
-		this.telemetryService.publicLog(action, { command, keybinding: keybinding ? (typeof keybinding === 'string' ? keybinding : keybinding.getUserSettingsLabel()) : '' });
+		this.telemetryService.publicLog(action, { command, keybinding: keybinding ? (JSONKeysUtils.isJSONKey(keybinding) ? keybinding : keybinding.getUserSettingsLabel()) : '' });
 	}
 
 	private onKeybindingEditingError(error: any): void {

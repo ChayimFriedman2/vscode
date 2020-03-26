@@ -7,7 +7,7 @@ import * as strings from 'vs/base/common/strings';
 import * as dom from 'vs/base/browser/dom';
 import { StandardKeyboardEvent } from 'vs/base/browser/keyboardEvent';
 import { Emitter, Event } from 'vs/base/common/event';
-import { Keybinding, ResolvedKeybinding, SimpleKeybinding, createKeybinding } from 'vs/base/common/keyCodes';
+import { Keybinding, ResolvedKeybinding, SimpleKeybinding, createKeybinding, JSONKey } from 'vs/base/common/keyCodes';
 import { IDisposable, IReference, ImmortalReference, toDisposable, DisposableStore, Disposable } from 'vs/base/common/lifecycle';
 import { OS, isLinux, isMacintosh } from 'vs/base/common/platform';
 import Severity from 'vs/base/common/severity';
@@ -47,7 +47,7 @@ import { SimpleServicesNLS } from 'vs/editor/common/standaloneStrings';
 import { ClassifiedEvent, StrictPropertyCheck, GDPRClassification } from 'vs/platform/telemetry/common/gdprTypings';
 import { basename } from 'vs/base/common/resources';
 import { ICodeEditorService } from 'vs/editor/browser/services/codeEditorService';
-import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding, SelectionBinding, BaseMouseBinding } from 'vs/base/common/mouseButtons';
 
 export class SimpleModel implements IResolvedTextEditorModel {
 
@@ -381,9 +381,9 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
 		return result;
 	}
 
-	public resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[] {
-		return keybinding instanceof MouseBinding ?
-			[new ResolvedMouseBinding(OS, keybinding)] :
+	public resolveKeybinding(keybinding: Keybinding | MouseBinding | SelectionBinding): ResolvedKeybinding[] {
+		return keybinding instanceof BaseMouseBinding ?
+			[new ResolvedMouseBinding(keybinding)] :
 			[new USLayoutResolvedKeybinding(keybinding, OS)];
 	}
 
@@ -398,7 +398,7 @@ export class StandaloneKeybindingService extends AbstractKeybindingService {
 		return new USLayoutResolvedKeybinding(keybinding, OS);
 	}
 
-	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {
+	public resolveUserBinding(userBinding: JSONKey): ResolvedKeybinding[] {
 		return [];
 	}
 

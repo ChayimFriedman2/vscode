@@ -20,7 +20,7 @@ import { timeout } from 'vs/base/common/async';
 import { IDriver, IElement, IWindowDriver } from 'vs/platform/driver/common/driver';
 import { ILifecycleMainService } from 'vs/platform/lifecycle/electron-main/lifecycleMainService';
 import { IElectronMainService } from 'vs/platform/electron/electron-main/electronMainService';
-import { MouseBinding } from 'vs/base/common/mouseButtons';
+import { BaseMouseBinding, MouseBinding, SelectionBinding } from 'vs/base/common/mouseButtons';
 
 function isSilentKeyCode(keyCode: KeyCode) {
 	return keyCode < KeyCode.KEY_0;
@@ -91,7 +91,7 @@ export class Driver implements IDriver, IWindowDriverRegistry {
 
 		const parts = KeybindingParser.parseUserBinding(keybinding);
 
-		if (parts instanceof MouseBinding) {
+		if (parts instanceof BaseMouseBinding) {
 			await this._dispatchKeybinding(windowId, parts);
 		} else {
 			for (let part of parts) {
@@ -100,11 +100,11 @@ export class Driver implements IDriver, IWindowDriverRegistry {
 		}
 	}
 
-	private async _dispatchKeybinding(windowId: number, keybinding: SimpleKeybinding | ScanCodeBinding | MouseBinding): Promise<void> {
+	private async _dispatchKeybinding(windowId: number, keybinding: SimpleKeybinding | ScanCodeBinding | MouseBinding | SelectionBinding): Promise<void> {
 		if (keybinding instanceof ScanCodeBinding) {
 			throw new Error('ScanCodeBindings not supported');
 		}
-		if (keybinding instanceof MouseBinding) {
+		if (keybinding instanceof BaseMouseBinding) {
 			throw new Error('MouseBindings not supported');
 		}
 

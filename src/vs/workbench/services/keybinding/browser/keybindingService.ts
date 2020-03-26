@@ -47,7 +47,7 @@ import { INavigatorWithKeyboard, IKeyboard } from 'vs/workbench/services/keybind
 import { ScanCode, ScanCodeUtils, IMMUTABLE_CODE_TO_KEY_CODE } from 'vs/base/common/scanCode';
 import { flatten } from 'vs/base/common/arrays';
 import { BrowserFeatures, KeyboardSupport } from 'vs/base/browser/canIUse';
-import { MouseBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, SelectionBinding, BaseMouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
 
 interface ContributedKeyBinding {
 	command: string;
@@ -384,11 +384,11 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		for (const item of items) {
 			const when = item.when || undefined;
 			const parts = item.parts;
-			if (!(parts instanceof MouseBinding) && parts.length === 0) {
+			if (!(parts instanceof BaseMouseBinding) && parts.length === 0) {
 				// This might be a removal keybinding item in user settings => accept it
 				result[resultLen++] = new ResolvedKeybindingItem(undefined, item.command, item.commandArgs, when, isDefault);
 			} else {
-				const resolvedKeybindings = this._keyboardMapper.resolveUserBinding(parts);
+				const resolvedKeybindings = parts instanceof BaseMouseBinding ? [new ResolvedMouseBinding(parts)] : this._keyboardMapper.resolveUserBinding(parts);
 				for (const resolvedKeybinding of resolvedKeybindings) {
 					result[resultLen++] = new ResolvedKeybindingItem(resolvedKeybinding, item.command, item.commandArgs, when, isDefault);
 				}
@@ -398,7 +398,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		return result;
 	}
 
-	private _assertBrowserConflicts(kb: Keybinding | MouseBinding, commandId: string): boolean {
+	private _assertBrowserConflicts(kb: Keybinding | MouseBinding | SelectionBinding, commandId: string): boolean {
 		if (BrowserFeatures.keyboard === KeyboardSupport.Always) {
 			return false;
 		}
@@ -407,7 +407,7 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 			return false;
 		}
 
-		if (kb instanceof MouseBinding) {
+		if (kb instanceof BaseMouseBinding) {
 			return false;
 		}
 
@@ -469,8 +469,10 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		return false;
 	}
 
-	public resolveKeybinding(kb: Keybinding | MouseBinding): ResolvedKeybinding[] {
-		return this._keyboardMapper.resolveKeybinding(kb);
+	public resolveKeybinding(kb: Keybinding | MouseBinding | SelectionBinding): ResolvedKeybinding[] {
+		return kb instanceof BaseMouseBinding
+			? [new ResolvedMouseBinding(kb)]
+			: this._keyboardMapper.resolveKeybinding(kb);
 	}
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
@@ -478,9 +480,9 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		return this._keyboardMapper.resolveKeyboardEvent(keyboardEvent);
 	}
 
-	public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {
+	public resolveUserBinding(userBinding: JSONKey): ResolvedKeybinding[] {
 		const parts = KeybindingParser.parseUserBinding(userBinding);
-		return this._keyboardMapper.resolveUserBinding(parts);
+		return parts instanceof BaseMouseBinding ? [new ResolvedMouseBinding(parts)] : this._keyboardMapper.resolveUserBinding(parts);
 	}
 
 	private _handleKeybindingsExtensionPointUser(isBuiltin: boolean, keybindings: ContributedKeyBinding | ContributedKeyBinding[], collector: ExtensionMessageCollector, result: IKeybindingRule2[]): void {

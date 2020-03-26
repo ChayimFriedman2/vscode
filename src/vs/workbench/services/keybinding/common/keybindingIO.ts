@@ -9,10 +9,10 @@ import { ScanCodeBinding } from 'vs/base/common/scanCode';
 import { ContextKeyExpr, ContextKeyExpression } from 'vs/platform/contextkey/common/contextkey';
 import { IUserFriendlyKeybinding } from 'vs/platform/keybinding/common/keybinding';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { MouseBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, SelectionBinding } from 'vs/base/common/mouseButtons';
 
 export interface IUserKeybindingItem {
-	parts: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding;
+	parts: (SimpleKeybinding | ScanCodeBinding)[] | MouseBinding | SelectionBinding;
 	command: string | null;
 	commandArgs?: any;
 	when: ContextKeyExpression | undefined;

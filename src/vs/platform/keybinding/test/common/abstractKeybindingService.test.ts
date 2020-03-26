@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as assert from 'assert';
-import { KeyChord, KeyCode, KeyMod, Keybinding, ResolvedKeybinding, SimpleKeybinding, createKeybinding, createSimpleKeybinding } from 'vs/base/common/keyCodes';
+import { KeyChord, KeyCode, KeyMod, Keybinding, ResolvedKeybinding, SimpleKeybinding, createKeybinding, createSimpleKeybinding, JSONKey } from 'vs/base/common/keyCodes';
 import { OS } from 'vs/base/common/platform';
 import Severity from 'vs/base/common/severity';
 import { ICommandService } from 'vs/platform/commands/common/commands';
@@ -16,7 +16,7 @@ import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayo
 import { INotification, INotificationService, IPromptChoice, IPromptOptions, NoOpNotification, IStatusMessageOptions } from 'vs/platform/notification/common/notification';
 import { NullTelemetryService } from 'vs/platform/telemetry/common/telemetryUtils';
 import { Disposable } from 'vs/base/common/lifecycle';
-import { MouseBinding, ResolvedMouseBinding } from 'vs/base/common/mouseButtons';
+import { MouseBinding, ResolvedMouseBinding, SelectionBinding, BaseMouseBinding } from 'vs/base/common/mouseButtons';
 
 function createContext(ctx: any) {
 	return {
@@ -49,8 +49,8 @@ suite('AbstractKeybindingService', () => {
 			return true;
 		}
 
-		public resolveKeybinding(kb: Keybinding | MouseBinding): ResolvedKeybinding[] {
-			return kb instanceof MouseBinding ? [new ResolvedMouseBinding(OS, kb)] : [new USLayoutResolvedKeybinding(kb, OS)];
+		public resolveKeybinding(kb: Keybinding | MouseBinding | SelectionBinding): ResolvedKeybinding[] {
+			return kb instanceof BaseMouseBinding ? [new ResolvedMouseBinding(kb)] : [new USLayoutResolvedKeybinding(kb, OS)];
 		}
 
 		public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
@@ -64,7 +64,7 @@ suite('AbstractKeybindingService', () => {
 			return this.resolveKeybinding(keybinding)[0];
 		}
 
-		public resolveUserBinding(userBinding: string): ResolvedKeybinding[] {
+		public resolveUserBinding(userBinding: JSONKey): ResolvedKeybinding[] {
 			return [];
 		}
 

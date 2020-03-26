@@ -10,7 +10,7 @@ import { IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextk
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
-import { MouseBinding, MouseButton } from 'vs/base/common/mouseButtons';
+import { MouseBinding, MouseButton, SelectionBinding } from 'vs/base/common/mouseButtons';
 
 export interface IUserFriendlyKeybinding {
 	key: JSONKey;
@@ -59,6 +59,7 @@ export const IKeybindingService = createDecorator<IKeybindingService>('keybindin
 
 export interface IEditorMouseEvent extends IMouseEvent {
 	position: { lineNumber: number; column: number; };
+	times: number;
 }
 
 export interface IKeybindingService {
@@ -71,7 +72,7 @@ export interface IKeybindingService {
 	/**
 	 * Returns none, one or many (depending on keyboard layout)!
 	 */
-	resolveKeybinding(keybinding: Keybinding | MouseBinding): ResolvedKeybinding[];
+	resolveKeybinding(keybinding: Keybinding | MouseBinding | SelectionBinding): ResolvedKeybinding[];
 
 	/**
 	 * @returns true if a selection shortcut was reached. In that case, either completeSelection() or cancelSelection() should be called after.

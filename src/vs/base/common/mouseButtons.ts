@@ -105,7 +105,7 @@ export class MouseBinding extends BaseMouseBinding {
 		this.times = times;
 	}
 
-	protected equals(other: MouseBinding): boolean {
+	equals(other: MouseBinding): boolean {
 		return super.equals(other) && (this.times || 1) === (other.times || 1);
 	}
 
@@ -136,7 +136,7 @@ export class MouseBinding extends BaseMouseBinding {
 
 export class SelectionBinding extends BaseMouseBinding {
 
-	equals(other: MouseBinding): boolean {
+	equals(other: SelectionBinding): boolean {
 		return super.equals(other);
 	}
 

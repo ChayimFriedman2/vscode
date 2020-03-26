@@ -89,6 +89,7 @@ export abstract class BaseMouseBinding {
 	abstract getAriaLabel(): string | null;
 
 	abstract get dispatchPrefix(): string;
+	abstract get uiPrefix(): string | undefined;
 
 	abstract asJSONKey(): JSONKey;
 }
@@ -110,7 +111,7 @@ export class MouseBinding extends BaseMouseBinding {
 	}
 
 	getHashCode(): string {
-		return `${this.times}m` + super.getHashCode();
+		return `${this.times || 1}m` + super.getHashCode();
 	}
 
 	getLabel(): string | null {
@@ -122,7 +123,11 @@ export class MouseBinding extends BaseMouseBinding {
 	}
 
 	get dispatchPrefix(): string {
-		return 'mouse';
+		return `mouse ${this.times || 1}`;
+	}
+
+	get uiPrefix(): string | undefined {
+		return undefined;
 	}
 
 	asJSONKey(): JSONKey {
@@ -156,6 +161,10 @@ export class SelectionBinding extends BaseMouseBinding {
 
 	get dispatchPrefix(): string {
 		return 'selection';
+	}
+
+	get uiPrefix(): string | undefined {
+		return 'SEL';
 	}
 
 	asJSONKey(): JSONKey {
@@ -208,7 +217,7 @@ export class ResolvedMouseBinding extends ResolvedKeybinding {
 			this._binding.metaKey,
 			MouseButtonUtils.toString(this._binding.button),
 			MouseButtonUtils.toAriaString(this._binding.button),
-			'SEL'
+			this._binding.uiPrefix
 		)];
 	}
 

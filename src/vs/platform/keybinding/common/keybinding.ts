@@ -62,6 +62,12 @@ export interface IEditorMouseEvent extends IMouseEvent {
 	times: number;
 }
 
+export const enum MouseBindingType {
+	None = 0,
+	Mouse,
+	Selection
+}
+
 export interface IKeybindingService {
 	_serviceBrand: undefined;
 
@@ -74,10 +80,7 @@ export interface IKeybindingService {
 	 */
 	resolveKeybinding(keybinding: Keybinding | MouseBinding | SelectionBinding): ResolvedKeybinding[];
 
-	/**
-	 * @returns true if a selection shortcut was reached. In that case, either completeSelection() or cancelSelection() should be called after.
-	 */
-	onEditorMouseDown(mouseEvent: IMouseEvent): boolean;
+	onEditorMouseDown(mouseEvent: IEditorMouseEvent, enableNonSelections: boolean): MouseBindingType;
 
 	/**
 	 * Finishes the selection shortcut and executes the bound command.
@@ -90,11 +93,6 @@ export interface IKeybindingService {
 	 * Called for example when a key was pressed while selecting.
 	 */
 	cancelSelection(): void;
-
-	/**
-	 * Called in mouseup event if the event did not finish a selection - i.e. no selection, just mouse up.
-	 */
-	onEditorMouseUp(mouseEvent: IEditorMouseEvent): void;
 
 	resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding;
 
@@ -110,7 +108,7 @@ export interface IKeybindingService {
 	 */
 	softDispatch(keyboardEvent: IKeyboardEvent, target: IContextKeyServiceTarget): IResolveResult | null;
 
-	dispatchByUserSettingsLabel(userSettingsLabel: string, target: IContextKeyServiceTarget): void;
+	dispatchByUserSettingsLabel(userSettingsLabel: JSONKey, target: IContextKeyServiceTarget): void;
 
 	/**
 	 * Look up keybindings for a command.

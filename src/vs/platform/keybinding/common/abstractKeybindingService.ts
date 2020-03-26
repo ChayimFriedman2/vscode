@@ -11,7 +11,7 @@ import { KeyCode, Keybinding, ResolvedKeybinding, JSONKey } from 'vs/base/common
 import { Disposable, IDisposable } from 'vs/base/common/lifecycle';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { IContextKeyService, IContextKeyServiceTarget } from 'vs/platform/contextkey/common/contextkey';
-import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution, IEditorMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution, IEditorMouseEvent, MouseBindingType } from 'vs/platform/keybinding/common/keybinding';
 import { IResolveResult, KeybindingResolver } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { INotificationService } from 'vs/platform/notification/common/notification';
@@ -108,19 +108,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	public softDispatch(e: IKeyboardEvent, target: IContextKeyServiceTarget): IResolveResult | null {
 		const keybinding = this.resolveKeyboardEvent(e);
-		if (keybinding.isChord()) {
-			console.warn('Unexpected keyboard event mapped to a chord');
-			return null;
-		}
-		const [firstPart,] = keybinding.getDispatchParts();
-		if (firstPart === null) {
-			// cannot be dispatched, probably only modifier keys
-			return null;
-		}
-
-		const contextValue = this._contextKeyService.getContext(target);
-		const currentChord = this._currentChord ? this._currentChord.keypress : null;
-		return this._getResolver().resolve(contextValue, currentChord, firstPart);
+		return this._getCommand(keybinding, target);
 	}
 
 	private _enterChordMode(firstPart: string, keypressLabel: string | null): void {
@@ -155,17 +143,28 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		this._currentChord = null;
 	}
 
-	public dispatchByUserSettingsLabel(userSettingsLabel: string, target: IContextKeyServiceTarget): void {
+	public dispatchByUserSettingsLabel(userSettingsLabel: JSONKey, target: IContextKeyServiceTarget): void {
 		const keybindings = this.resolveUserBinding(userSettingsLabel);
 		if (keybindings.length >= 1) {
 			this._doDispatch(keybindings[0], target);
 		}
 	}
 
-	public onEditorMouseDown(mouseEvent: IEditorMouseEvent): boolean {
-		const resolvedBinding = new ResolvedMouseBinding(new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button));
+	public onEditorMouseDown(mouseEvent: IEditorMouseEvent, enableNonSelections: boolean): MouseBindingType {
+		let resolvedBinding: ResolvedMouseBinding;
+
+		if (enableNonSelections) {
+			resolvedBinding = new ResolvedMouseBinding(new MouseBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button, mouseEvent.times));
+			const mouseCommand = this._getCommand(resolvedBinding, mouseEvent.target);
+			if (mouseCommand) {
+				this._executeCommand(mouseCommand, [mouseEvent.position]);
+				return MouseBindingType.Mouse;
+			}
+		}
+
+		resolvedBinding = new ResolvedMouseBinding(new SelectionBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button));
 		this._selectionCommand = this._getCommand(resolvedBinding, mouseEvent.target);
-		return this._selectionCommand !== null;
+		return this._selectionCommand !== null ? MouseBindingType.Selection : MouseBindingType.None;
 	}
 
 	public completeSelection(): Promise<void> {
@@ -176,18 +175,6 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	public cancelSelection(): void {
 		this._selectionCommand = null;
-	}
-
-	public onEditorMouseUp(mouseEvent: IEditorMouseEvent): void {
-		const resolvedBinding = new ResolvedMouseBinding(new MouseBinding(mouseEvent.ctrlKey, mouseEvent.shiftKey, mouseEvent.altKey, mouseEvent.metaKey, mouseEvent.button, mouseEvent.times));
-		const command = this._getCommand(resolvedBinding, mouseEvent.target);
-		if (command) {
-			// Use Object.create() instead of object literal so user has no access to Object's method
-			const position = Object.create(null);
-			position.lineNumber = mouseEvent.position.lineNumber;
-			position.column = mouseEvent.position.column;
-			this._executeCommand(command, { position });
-		}
 	}
 
 	protected _dispatch(e: IKeyboardEvent, target: IContextKeyServiceTarget): boolean {
@@ -241,50 +228,20 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		return shouldPreventDefault;
 	}
 
-	/**
-	 * Digs into an object and peeks up a property.
-	 * @param obj The object to dig into.
-	 * @param property A string specifies the property, using dot notation. Although array are not supported, you can simulate them using `array.index` syntax (e.g. `property.5.property` or `5.property`) because of JavaScript's array are objects.
-	 * @throws {TypeError} If the property was not found.
-	 */
-	private static peekObjectProperty(obj: any, property: string): any {
-		return property.split('.').reduce((obj: any, property: string) => obj[property], obj);
-	}
-
-	private static parseArg(commandArg: any, args: any): any {
-		return (commandArg as string).replace(/\$\{(.*?)\}/g, (match: string, arg: string) => {
-			return this.peekObjectProperty(args, arg);
-		});
-	}
-
-	private static parseArgs(commandArgs: any, args: any): any {
-		if (commandArgs === undefined) {
-			return undefined;
-		}
+	private _executeCommand(resolveResult: IResolveResult, args?: any[]): Promise<void> {
 		if (args === undefined) {
-			return commandArgs;
+			args = resolveResult.commandArgs;
+		} else if (resolveResult.commandArgs !== undefined) {
+			args = args.concat(resolveResult.commandArgs);
 		}
-		if (!Array.isArray(commandArgs)) {
-			return this.parseArg(commandArgs, args);
-		}
-		return commandArgs.map(commandArg => this.parseArg(commandArg, args));
-	}
 
-	private _executeCommand(resolveResult: IResolveResult, args?: any): Promise<void> {
-		let parsedArgs: any;
-		try {
-			parsedArgs = AbstractKeybindingService.parseArgs(resolveResult.commandArgs, args);
-		} catch {
-			this._notificationService.warn(nls.localize('invalidArg', "Invalid argument for command: property not found"));
-			return Promise.resolve();
-		}
 		const commandId = resolveResult.commandId!;
 		this._telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: commandId, from: 'keybinding' });
-		if (typeof parsedArgs === 'undefined') {
+		if (typeof args === 'undefined') {
 			return this._commandService.executeCommand(commandId).then(undefined, err => this._notificationService.warn(err));
 		}
 		else {
-			return this._commandService.executeCommand(commandId, parsedArgs).then(undefined, err => this._notificationService.warn(err));
+			return this._commandService.executeCommand(commandId).then(undefined, err => this._notificationService.warn(err));
 		}
 	}
 

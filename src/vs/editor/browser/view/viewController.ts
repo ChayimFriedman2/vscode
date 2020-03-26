@@ -132,6 +132,23 @@ export class ViewController {
 		return false;
 	}
 
+	public dispatchMouseBinding(data: IMouseDispatchData): void {
+		if (data.startedOnLineNumbers) {
+			// If the dragging started on the gutter, then have operations work on the entire line
+			if (data.inSelectionMode) {
+				this._lineSelectDrag(data.position);
+			} else {
+				this._lineSelect(data.position);
+			}
+		} else {
+			if (data.inSelectionMode) {
+				this._moveToSelect(data.position);
+			} else {
+				this.moveTo(data.position);
+			}
+		}
+	}
+
 	public dispatchMouse(data: IMouseDispatchData): void {
 		const options = this.configuration.options;
 		const selectionClipboardIsOn = (platform.isLinux && options.get(EditorOption.selectionClipboard));
@@ -187,7 +204,7 @@ export class ViewController {
 					} else {
 						// Do multi-cursor operations only when purely alt is pressed
 						if (data.inSelectionMode) {
-							this.lastCursorMoveToSelect(data.position);
+							this._lastCursorMoveToSelect(data.position);
 						} else {
 							this._createCursor(data.position, false);
 						}
@@ -246,7 +263,7 @@ export class ViewController {
 		});
 	}
 
-	public lastCursorMoveToSelect(viewPosition: Position): void {
+	public _lastCursorMoveToSelect(viewPosition: Position): void {
 		this._execMouseCommand(CoreNavigationCommands.LastCursorMoveToSelect, this._usualArgs(viewPosition));
 	}
 

@@ -7,7 +7,7 @@ import { Event } from 'vs/base/common/event';
 import { Keybinding, ResolvedKeybinding, SimpleKeybinding, JSONKey } from 'vs/base/common/keyCodes';
 import { OS } from 'vs/base/common/platform';
 import { IContextKey, IContextKeyChangeEvent, IContextKeyService, IContextKeyServiceTarget, ContextKeyExpression } from 'vs/platform/contextkey/common/contextkey';
-import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IEditorMouseEvent, IMouseEvent } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingEvent, IKeybindingService, IKeyboardEvent, IEditorMouseEvent, IMouseEvent, MouseBindingType } from 'vs/platform/keybinding/common/keybinding';
 import { IResolveResult } from 'vs/platform/keybinding/common/keybindingResolver';
 import { ResolvedKeybindingItem } from 'vs/platform/keybinding/common/resolvedKeybindingItem';
 import { USLayoutResolvedKeybinding } from 'vs/platform/keybinding/common/usLayoutResolvedKeybinding';
@@ -106,8 +106,8 @@ export class MockKeybindingService implements IKeybindingService {
 	}
 
 	// TODO: Add tests for mouse bindings
-	onEditorMouseDown(mouseEvent: IMouseEvent): boolean {
-		return false;
+	onEditorMouseDown(mouseEvent: IMouseEvent, enableNonSelections: boolean): MouseBindingType {
+		return MouseBindingType.None;
 	}
 	public completeSelection(): Promise<void> {
 		return Promise.resolve();
@@ -137,7 +137,7 @@ export class MockKeybindingService implements IKeybindingService {
 		return null;
 	}
 
-	public dispatchByUserSettingsLabel(userSettingsLabel: string, target: IContextKeyServiceTarget): void {
+	public dispatchByUserSettingsLabel(userSettingsLabel: JSONKey, target: IContextKeyServiceTarget): void {
 
 	}
 

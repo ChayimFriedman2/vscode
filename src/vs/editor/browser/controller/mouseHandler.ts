@@ -12,7 +12,7 @@ import * as platform from 'vs/base/common/platform';
 import { HitTestContext, IViewZoneData, MouseTarget, MouseTargetFactory, PointerHandlerLastRenderData } from 'vs/editor/browser/controller/mouseTarget';
 import { IMouseTarget, MouseTargetType } from 'vs/editor/browser/editorBrowser';
 import { ClientCoordinates, EditorMouseEvent, EditorMouseEventFactory, GlobalEditorMouseMoveMonitor, createEditorPagePosition } from 'vs/editor/browser/editorDom';
-import { ViewController } from 'vs/editor/browser/view/viewController';
+import { ViewController, IMouseDispatchData } from 'vs/editor/browser/view/viewController';
 import { EditorZoom } from 'vs/editor/common/config/editorZoom';
 import { Position } from 'vs/editor/common/core/position';
 import { Selection } from 'vs/editor/common/core/selection';
@@ -21,7 +21,7 @@ import { ViewContext } from 'vs/editor/common/view/viewContext';
 import * as viewEvents from 'vs/editor/common/view/viewEvents';
 import { ViewEventHandler } from 'vs/editor/common/viewModel/viewEventHandler';
 import { EditorOption } from 'vs/editor/common/config/editorOptions';
-import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
+import { IKeybindingService, IEditorMouseEvent as IKeybindingEditorMouseEvent, MouseBindingType } from 'vs/platform/keybinding/common/keybinding';
 
 /**
  * Merges mouse events when mouse move events are throttled
@@ -229,11 +229,17 @@ export class MouseHandler extends ViewEventHandler {
 		};
 
 		if (targetIsContent || (targetIsLineNumbers && selectOnLineNumbers)) {
-			if (this.keybindingService.onEditorMouseDown(e)) {
+			const keybindingMouseEvent = this._mouseDownOperation.getKeybindingMouseEvent(e);
+			let bindingTriggered: MouseBindingType;
+			if (keybindingMouseEvent && (bindingTriggered = this.keybindingService.onEditorMouseDown(keybindingMouseEvent, targetIsContent)) !== MouseBindingType.None) {
 				focus();
-				this._mouseDownOperation.startSelection(t.type, e,
-					() => this.keybindingService.cancelSelection(), () => this.keybindingService.completeSelection());
-			} else if (shouldHandle) {
+				if (bindingTriggered === MouseBindingType.Selection) {
+					this._mouseDownOperation.startSelection(t.type, e,
+						() => this.keybindingService.cancelSelection(),
+						() => this.keybindingService.completeSelection());
+				}
+			}
+			if (shouldHandle) {
 				focus();
 				this._mouseDownOperation.start(t.type, e);
 			}
@@ -300,6 +306,9 @@ class MouseDownOperation extends Disposable {
 		this._currentSelection = new Selection(1, 1, 1, 1);
 		this._isActive = false;
 		this._lastMouseEvent = null;
+
+		this._viewController.dispatchMouse = this._viewController.dispatchMouse.bind(this._viewController);
+		this._viewController.dispatchMouseBinding = this._viewController.dispatchMouseBinding.bind(this._viewController);
 	}
 
 	public dispose(): void {
@@ -310,7 +319,7 @@ class MouseDownOperation extends Disposable {
 		return this._isActive;
 	}
 
-	private _onMouseDownThenMove(e: EditorMouseEvent): void {
+	private _onMouseDownThenMove(e: EditorMouseEvent, callback: (data: IMouseDispatchData) => void) {
 		this._lastMouseEvent = e;
 		this._mouseState.setModifiers(e);
 
@@ -326,7 +335,7 @@ class MouseDownOperation extends Disposable {
 				target: position
 			});
 		} else {
-			this._dispatchMouse(position, true);
+			this._dispatchMouse(position, true, callback);
 		}
 	}
 
@@ -366,7 +375,7 @@ class MouseDownOperation extends Disposable {
 				e.target,
 				e.buttons,
 				createMouseMoveEventMerger(null),
-				(e) => this._onMouseDownThenMove(e),
+				(e) => this._onMouseDownThenMove(e, this._viewController.dispatchMouse),
 				() => {
 					const position = this._findMousePosition(this._lastMouseEvent!, true);
 
@@ -383,7 +392,7 @@ class MouseDownOperation extends Disposable {
 		}
 
 		this._mouseState.isDragAndDrop = false;
-		this._dispatchMouse(position, e.shiftKey);
+		this._dispatchMouse(position, e.shiftKey, this._viewController.dispatchMouse);
 
 		if (!this._isActive) {
 			this._isActive = true;
@@ -391,7 +400,7 @@ class MouseDownOperation extends Disposable {
 				e.target,
 				e.buttons,
 				createMouseMoveEventMerger(null),
-				(e) => this._onMouseDownThenMove(e),
+				(e) => this._onMouseDownThenMove(e, this._viewController.dispatchMouse),
 				() => this._stop()
 			);
 		}
@@ -410,23 +419,40 @@ class MouseDownOperation extends Disposable {
 		}
 
 		this._mouseState.isDragAndDrop = false;
-		this._dispatchMouse(position, false);
+		this._dispatchMouse(position, false, this._viewController.dispatchMouseBinding);
 
 		this._isActive = true;
 		this._mouseMoveMonitor.startMonitoring(
 			e.target,
 			e.buttons,
 			createMouseMoveEventMerger(null),
-			(e) => this._onMouseDownThenMove(e),
+			(e) => this._onMouseDownThenMove(e, this._viewController.dispatchMouseBinding),
 			() => this._stop(),
-			onCancel,
-			onFinish
+			() => onCancel(),
+			() => onFinish()
 		);
 	}
 
 	private _stop(): void {
 		this._isActive = false;
 		this._onScrollTimeout.cancel();
+	}
+
+	public getKeybindingMouseEvent(e: EditorMouseEvent): IKeybindingEditorMouseEvent | null {
+		const position = this._findMousePosition(e, true);
+		if (!position || !position.position) {
+			return null;
+		}
+		return {
+			ctrlKey: e.ctrlKey,
+			shiftKey: e.shiftKey,
+			altKey: e.altKey,
+			metaKey: e.metaKey,
+			button: e.button,
+			target: e.target,
+			times: this._mouseState.count,
+			position: position.position
+		};
 	}
 
 	public onScrollChanged(): void {
@@ -446,7 +472,7 @@ class MouseDownOperation extends Disposable {
 				// Ignoring because users are dragging the text
 				return;
 			}
-			this._dispatchMouse(position, true);
+			this._dispatchMouse(position, true, this._viewController.dispatchMouse);
 		}, 10);
 	}
 
@@ -540,11 +566,11 @@ class MouseDownOperation extends Disposable {
 		return null;
 	}
 
-	private _dispatchMouse(position: MouseTarget, inSelectionMode: boolean): void {
+	private _dispatchMouse(position: MouseTarget, inSelectionMode: boolean, callback: (data: IMouseDispatchData) => void): void {
 		if (!position.position) {
 			return;
 		}
-		this._viewController.dispatchMouse({
+		callback({
 			position: position.position,
 			mouseColumn: position.mouseColumn,
 			startedOnLineNumbers: this._mouseState.startedOnLineNumbers,
@@ -584,6 +610,9 @@ class MouseDownState {
 	private _middleButton: boolean;
 	public get middleButton(): boolean { return this._middleButton; }
 
+	private _rightButton: boolean;
+	public get rightButton(): boolean { return this._rightButton; }
+
 	private _startedOnLineNumbers: boolean;
 	public get startedOnLineNumbers(): boolean { return this._startedOnLineNumbers; }
 
@@ -600,6 +629,7 @@ class MouseDownState {
 		this._shiftKey = false;
 		this._leftButton = false;
 		this._middleButton = false;
+		this._rightButton = false;
 		this._startedOnLineNumbers = false;
 		this._lastMouseDownPosition = null;
 		this._lastMouseDownPositionEqualCount = 0;
@@ -622,6 +652,7 @@ class MouseDownState {
 	public setStartButtons(source: EditorMouseEvent) {
 		this._leftButton = source.leftButton;
 		this._middleButton = source.middleButton;
+		this._rightButton = source.rightButton;
 	}
 
 	public setStartedOnLineNumbers(startedOnLineNumbers: boolean): void {

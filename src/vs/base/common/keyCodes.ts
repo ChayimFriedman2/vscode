@@ -502,7 +502,9 @@ export namespace JSONKeysUtils {
 		if (isString(a) || isString(b)) {
 			return a === b;
 		}
-		return a.type === b.type && a.button === b.button && (a as IMouseJSONKey).times === (b as IMouseJSONKey).times;
+		return a.type === b.type
+			&& a.button === b.button &&
+			((a as IMouseJSONKey).times || 1) === ((b as IMouseJSONKey).times || 1);
 	}
 
 	export function toString(key: JSONKey) {

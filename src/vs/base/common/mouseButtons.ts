@@ -106,7 +106,7 @@ export class MouseBinding extends BaseMouseBinding {
 	}
 
 	protected equals(other: MouseBinding): boolean {
-		return super.equals(other) && this.times === other.times;
+		return super.equals(other) && (this.times || 1) === (other.times || 1);
 	}
 
 	getHashCode(): string {

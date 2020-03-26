@@ -49,7 +49,7 @@ import { IUpdateService } from 'vs/platform/update/common/update';
 import { IStorageService, StorageScope } from 'vs/platform/storage/common/storage';
 import { IPreferencesService } from '../services/preferences/common/preferences';
 import { IMenubarService, IMenubarData, IMenubarMenu, IMenubarKeybinding, IMenubarMenuItemSubmenu, IMenubarMenuItemAction, MenubarMenuItem } from 'vs/platform/menubar/node/menubar';
-import { withNullAsUndefined, assertIsDefined } from 'vs/base/common/types';
+import { withNullAsUndefined, assertIsDefined, isString } from 'vs/base/common/types';
 import { IOpenerService, OpenOptions } from 'vs/platform/opener/common/opener';
 import { Schemas } from 'vs/base/common/network';
 import { IElectronService } from 'vs/platform/electron/node/electron';
@@ -874,16 +874,24 @@ class NativeMenubarControl extends MenubarControl {
 			return undefined;
 		}
 
+		const userSettingsLabel = withNullAsUndefined(binding.getUserSettingsLabel());
+
+		if (!isString(userSettingsLabel)) {
+			// This is a mouse shortcut
+			return undefined;
+		}
+
 		// first try to resolve a native accelerator
 		const electronAccelerator = binding.getElectronAccelerator();
+
 		if (electronAccelerator) {
-			return { label: electronAccelerator, userSettingsLabel: withNullAsUndefined(binding.getUserSettingsLabel()) };
+			return { label: electronAccelerator, userSettingsLabel };
 		}
 
 		// we need this fallback to support keybindings that cannot show in electron menus (e.g. chords)
 		const acceleratorLabel = binding.getLabel();
 		if (acceleratorLabel) {
-			return { label: acceleratorLabel, isNative: false, userSettingsLabel: withNullAsUndefined(binding.getUserSettingsLabel()) };
+			return { label: acceleratorLabel, isNative: false, userSettingsLabel };
 		}
 
 		return undefined;

@@ -7,6 +7,7 @@ import { OperatingSystem } from 'vs/base/common/platform';
 import { illegalArgument } from 'vs/base/common/errors';
 import { MouseBinding, SelectionBinding } from 'vs/base/common/mouseButtons';
 import { isString } from 'vs/base/common/types';
+import * as strings from 'vs/base/common/strings';
 
 /**
  * Virtual Key Codes, the value does not hold any inherent meaning.
@@ -500,11 +501,11 @@ export interface ISelectionJSONKey {
 export namespace JSONKeysUtils {
 	export function equals(a: JSONKey, b: JSONKey): boolean {
 		if (isString(a) || isString(b)) {
-			return a === b;
+			return isString(a) && isString(b) && strings.compareIgnoreCase(a, b) === 0;
 		}
 		return a.type === b.type
-			&& a.button === b.button &&
-			((a as IMouseJSONKey).times || 1) === ((b as IMouseJSONKey).times || 1);
+			&& strings.compareIgnoreCase(a.button, b.button) === 0
+			&& ((a as IMouseJSONKey).times || 1) === ((b as IMouseJSONKey).times || 1);
 	}
 
 	export function toString(key: JSONKey) {
